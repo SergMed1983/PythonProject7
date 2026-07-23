@@ -33,3 +33,33 @@ cd PythonProject7
 ```powershell
 flake8 src/
 mypy src/
+
+## Примеры использования функций модуля `src.processing`
+
+### Фильтрация операций по статусу
+
+Функция `filter_by_state` позволяет отбирать операции по полю `state`. По умолчанию фильтрует только выполненные операции (`EXECUTED`).
+
+```python
+from src.processing import filter_by_state
+
+operations = [
+    {'id': 41428829, 'state': 'EXECUTED', 'date': '2019-07-03T18:35:29.512364'},
+    {'id': 939719570, 'state': 'EXECUTED', 'date': '2018-06-30T02:08:58.425572'},
+    {'id': 594226727, 'state': 'CANCELED', 'date': '2018-09-12T21:27:25.241689'}
+]
+
+# Получаем только выполненные операции (по умолчанию)
+executed_ops = filter_by_state(operations)
+
+# Получаем только отмененные операции
+canceled_ops = filter_by_state(operations, 'CANCELED')
+
+from src.processing import sort_by_date
+
+# Сортировка по убыванию (новые сначала) — поведение по умолчанию
+newest_first = sort_by_date(operations)
+
+# Сортировка по возрастанию (старые сначала)
+oldest_first = sort_by_date(operations, reverse=False)
+
