@@ -4,13 +4,13 @@
 
 ## Требования к окружению
 
-- Python версии **3.10** или выше (код совместим с актуальными стабильными версиями).
+- Python версии **3.10** или выше.
 - Менеджер пакетов `pip`.
 
 ## Установка и запуск
 
 ### 1. Клонирование репозитория
+
 ```bash
 git clone https://github.com/SergMed1983/PythonProject7.git
-cd PythonProject7 
-```
+cd PythonProject7
