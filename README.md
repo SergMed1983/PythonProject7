@@ -14,3 +14,11 @@
 ```bash
 git clone https://github.com/SergMed1983/PythonProject7.git
 cd PythonProject7
+
+## Тестирование
+
+Проект покрыт тестами с использованием библиотеки `pytest`.
+
+### Запуск тестов
+```bash
+pytest
