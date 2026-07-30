@@ -1,4 +1,8 @@
-from generators.main import filter_by_currency, transaction_descriptions, card_number_generator
+from generators.main import (
+    filter_by_currency,
+    transaction_descriptions,
+    card_number_generator,
+)
 
 
 def load_sample_transactions() -> list:
@@ -8,28 +12,28 @@ def load_sample_transactions() -> list:
             "state": "EXECUTED",
             "operationAmount": {
                 "amount": "9824.07",
-                "currency": {"name": "USD", "code": "USD"}
+                "currency": {"name": "USD", "code": "USD"},
             },
-            "description": "Перевод организации"
+            "description": "Перевод организации",
         },
         {
             "id": 142264268,
             "state": "EXECUTED",
             "operationAmount": {
                 "amount": "79114.93",
-                "currency": {"name": "USD", "code": "USD"}
+                "currency": {"name": "USD", "code": "USD"},
             },
-            "description": "Перевод со счета на счет"
+            "description": "Перевод со счета на счет",
         },
         {
             "id": 873106923,
             "state": "EXECUTED",
             "operationAmount": {
                 "amount": "43318.34",
-                "currency": {"name": "руб.", "code": "RUB"}
+                "currency": {"name": "руб.", "code": "RUB"},
             },
-            "description": "Перевод со счета на счет"
-        }
+            "description": "Перевод со счета на счет",
+        },
     ]
 
 
@@ -62,4 +66,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
