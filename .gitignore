@@ -2,5 +2,5 @@
 __pycache__/
 *.pyc
 .venv/
-htmlcov/
+#htmlcov/
 .pytest_cache/
