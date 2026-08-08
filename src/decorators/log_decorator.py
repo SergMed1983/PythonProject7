@@ -1,53 +1,48 @@
-import logging
 import functools
-from typing import Callable, Any, Optional
+import logging
+import sys
+from typing import Any, Callable, Optional, Union
 
 
 def log(filename: Optional[str] = None) -> Callable:
     """
-    Декоратор для логирования выполнения функций.
+    Декоратор для логирования выполнения функций в простом формате.
 
-    :param filename: Имя файла для логирования. Если None, логи идут в консоль.
+    При успешном выполнении выводит: "<имя_функции> ok"
+    При ошибке выводит: "<имя_функции> error:
+    <тип_ошибки>. Inputs: <args>, <kwargs>"
     """
-
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
-            # Создаем отдельный логгер для каждой функции, чтобы не конфликтовать с другими
             logger = logging.getLogger(func.__name__)
             logger.setLevel(logging.INFO)
 
-            # Очищаем старые хендлеры, чтобы не дублировать логи при повторных запусках тестов
             if logger.hasHandlers():
                 logger.handlers.clear()
 
-            # Настраиваем вывод: в файл ИЛИ в консоль (StreamHandler)
+            handler: Union[logging.FileHandler, logging.StreamHandler]
             if filename:
                 handler = logging.FileHandler(filename, encoding='utf-8')
-                # Важно: используем режим 'a' (append), чтобы не затирать логи предыдущих запусков в рамках одного теста
-                handler.mode = 'a'
             else:
-                handler = logging.StreamHandler()
+                handler = logging.StreamHandler(sys.stdout)
 
-            formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+            formatter = logging.Formatter('%(message)s')
             handler.setFormatter(formatter)
             logger.addHandler(handler)
-
-            # Логирование начала
-            logger.info(f"Start: {func.__name__}")
-            logger.info(f"Args: {args}, Kwargs: {kwargs}")
+            logger.propagate = False
 
             try:
                 result = func(*args, **kwargs)
-                logger.info(f"End: {func.__name__}. Result: {result}")
+                logger.info(f"{func.__name__} ok")
                 return result
             except Exception as e:
-                logger.error(f"Error in {func.__name__}: {str(e)}")
-                logger.error(f"Inputs: args={args}, kwargs={kwargs}")
+                error_msg = (
+                    f"{func.__name__} error: {type(e).__name__}. "
+                    f"Inputs: {args}, {kwargs}"
+                )
+                logger.error(error_msg)
                 raise
 
         return wrapper
-
     return decorator
-
-

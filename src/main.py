@@ -1,5 +1,11 @@
-from code import reverse_text
+﻿# src/main.py
+from src.decorators.log_decorator import log
+
+
+@log()
+def test_function():
+    print("Тестовая функция")
+
 
 if __name__ == "__main__":
-    text = "Урок по Git слияниям"
-    print(reverse_text(text))
+    test_function()

@@ -1,4 +1,4 @@
-from src.text_utils import reverse_text
+from text_utils import reverse_text
 
 
 def test_reverse_text_basic():

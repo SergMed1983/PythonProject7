@@ -1,39 +1,30 @@
-from typing import Any, Dict, List
-
-
-def filter_by_state(
-    operations: List[Dict[str, Any]], state: str = "EXECUTED"
-) -> List[Dict[str, Any]]:
+def filter_by_state(list_dict: list, state: str = 'EXECUTED') -> list:
     """
-    Фильтрует список операций по статусу.
+    Фильтрует список словарей по значению ключа 'state'.
 
-    Возвращает новый список, содержащий только операции с указанным значением
-    ключа 'state'. По умолчанию фильтрует по статусу 'EXECUTED'.
+    Аргументы:
+        list_dict: Список словарей для фильтрации
+        state: Значение state для фильтрации (по умолчанию 'EXECUTED')
 
-    :param operations: Список словарей с данными об операциях.
-    :param state: Значение статуса для фильтрации (по умолчанию 'EXECUTED').
-    :return: Отфильтрованный список операций.
+    Возвращает:
+        Отфильтрованный список словарей
     """
-    return [op for op in operations if op.get("state") == state]
+    return [item for item in list_dict if item.get('state') == state]
 
 
-def sort_by_date(
-    operations: List[Dict[str, Any]], reverse: bool = True
-) -> List[Dict[str, Any]]:
+def sort_by_date(list_dict: list, ascending: bool = True) -> list:
     """
-    Сортирует список операций по дате.
+    Сортирует список словарей по ключу 'date'.
 
-    Возвращает новый список, отсортированный по значению ключа 'date'.
-    По умолчанию сортирует в порядке убывания (сначала самые свежие операции).
+    Аргументы:
+        list_dict: Список словарей для сортировки
+        ascending: Если True - по возрастанию, False - по убыванию
 
-    :param operations: Список словарей с данными об операциях.
-    :param reverse: Флаг порядка сортировки:
-                    True — по убыванию (новые сначала),
-                    False — по возрастанию (старые сначала).
-    :return: Отсортированный список операций.
+    Возвращает:
+        Отсортированный список словарей
     """
-
-    def _get_date_key(op: Dict[str, Any]) -> str:
-        return op.get("date", "")
-
-    return sorted(operations, key=_get_date_key, reverse=reverse)
+    return sorted(
+        list_dict,
+        key=lambda x: x.get('date', ''),
+        reverse=not ascending
+    )

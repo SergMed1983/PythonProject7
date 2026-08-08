@@ -1,54 +1,84 @@
 import pytest
-from src.decorators.log_decorator import log
-import os
+
+from src.decorators import log
 
 
-def test_log_decorator_console_via_file(tmp_path):
-    """
-    Тест логирования. Так как мы используем logging, а не print,
-    мы проверяем содержимое временного файла.
-    """
-    log_file = tmp_path / "console_test.log"
+def test_log_to_console_success(capsys):
+    """Тест успешного выполнения с выводом в консоль."""
+    @log()
+    def add(a, b):
+        return a + b
 
-    @log(filename=str(log_file))  # Эмулируем консоль, записывая во временный файл для проверки
-    def test_func():
-        return "Результат работы"
-
-    result = test_func()
-    assert result == "Результат работы"
-
-    with open(log_file, "r", encoding="utf-8") as f:
-        content = f.read()
-        assert "Start: test_func" in content
-        assert "Result: Результат работы" in content
+    add(2, 3)
+    captured = capsys.readouterr()
+    assert captured.out == "add ok\n"
 
 
-def test_log_decorator_file(tmp_path):
-    log_file = tmp_path / "real_file.log"
-
-    @log(filename=str(log_file))
-    def test_func():
-        return "Финальный результат"
-
-    test_func()
-
-    with open(log_file, "r", encoding="utf-8") as f:
-        content = f.read()
-        assert "Start: test_func" in content
-        assert "Result: Финальный результат" in content
-
-
-def test_log_decorator_error(tmp_path):
-    log_file = tmp_path / "error.log"
-
-    @log(filename=str(log_file))
-    def divide(x, y):
-        return x / y
+def test_log_to_console_error(capsys):
+    """Тест ошибки с выводом в консоль."""
+    @log()
+    def divide(a, b):
+        return a / b
 
     with pytest.raises(ZeroDivisionError):
-        divide(1, 0)
+        divide(10, 0)
 
-    with open(log_file, "r", encoding="utf-8") as f:
-        content = f.read()
-        assert "Error in divide" in content
-        assert "Inputs: args=(1, 0)" in content
+    captured = capsys.readouterr()
+    expected = "divide error: ZeroDivisionError. Inputs: (10, 0), {}"
+    assert expected in captured.out
+
+
+def test_log_with_kwargs(capsys):
+    """Тест функции с именованными аргументами."""
+    @log()
+    def greet(name, greeting="Hello"):
+        return f"{greeting}, {name}!"
+
+    greet("Alice", greeting="Hi")
+    captured = capsys.readouterr()
+    assert captured.out == "greet ok\n"
+
+
+def test_log_to_file_success(tmp_path):
+    """Тест успешного выполнения с записью в файл."""
+    log_file = tmp_path / "test.log"
+
+    @log(filename=str(log_file))
+    def multiply(a, b):
+        return a * b
+
+    multiply(3, 4)
+    content = log_file.read_text()
+    assert "multiply ok" in content
+
+
+def test_log_to_file_error(tmp_path):
+    """Тест ошибки с записью в файл."""
+    log_file = tmp_path / "test.log"
+
+    @log(filename=str(log_file))
+    def divide(a, b):
+        return a / b
+
+    with pytest.raises(ZeroDivisionError):
+        divide(5, 0)
+
+    content = log_file.read_text()
+    expected = "divide error: ZeroDivisionError. Inputs: (5, 0), {}"
+    assert expected in content
+
+
+def test_log_multiple_calls(tmp_path):
+    """Тест множественных вызовов одной функции."""
+    log_file = tmp_path / "test.log"
+
+    @log(filename=str(log_file))
+    def increment(x):
+        return x + 1
+
+    increment(1)
+    increment(2)
+    increment(3)
+
+    content = log_file.read_text()
+    assert content.count("increment ok") == 3
