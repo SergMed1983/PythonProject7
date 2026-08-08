@@ -8,4 +8,8 @@ def test_function():
 
 
 if __name__ == "__main__":
+
     test_function()
+
+    text = input("Введите любой текст для реверса: ")
+    print(reverse_text(text))
