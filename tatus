@@ -1,0 +1,77 @@
+[33mcommit 3881ec8140e7cb7269eec2962297c8d09ec0180c[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/homework_10_1[m[33m, [m[1;31morigin/feature/homework_10_1[m[33m)[m
+Author: Serg Medvedev <medvserg@mail.ru>
+Date:   Thu Jul 23 22:36:28 2026 +0300
+
+    docs: fix README formatting and close code blocks
+
+[1mdiff --git a/README.md b/README.md[m
+[1mindex 6f49ec6..5043295 100644[m
+[1m--- a/README.md[m
+[1m+++ b/README.md[m
+[36m@@ -4,7 +4,7 @@[m
+ [m
+ ## Требования к окружению[m
+ [m
+[31m-- Python версии **3.14** или выше (версия проверена в проекте).[m
+[32m+[m[32m- Python версии **3.10** или выше (код совместим с актуальными стабильными версиями).[m
+ - Менеджер пакетов `pip`.[m
+ [m
+ ## Установка и запуск[m
+[36m@@ -12,54 +12,5 @@[m
+ ### 1. Клонирование репозитория[m
+ ```bash[m
+ git clone https://github.com/SergMed1983/PythonProject7.git[m
+[31m-cd PythonProject7[m
+[31m-[m
+[31m-## Тестирование[m
+[31m-[m
+[31m-Для проверки корректности работы функций используется `pytest`.[m
+[31m-[m
+[31m-1. Установите pytest (если ещё не установлен):[m
+[31m-   ```powershell[m
+[31m-   pip install pytest[m
+[31m-[m
+[31m-## Проверка качества кода[m
+[31m-[m
+[31m-Проект соответствует стандартам PEP 8 и строгой типизации:[m
+[31m-[m
+[31m-- `flake8`: ошибок не найдено[m
+[31m-- `mypy`: ошибок не найдено[m
+[31m-[m
+[31m-Для проверки на своей машине можно запустить:[m
+[31m-```powershell[m
+[31m-flake8 src/[m
+[31m-mypy src/[m
+[31m-[m
+[31m-## Примеры использования функций модуля `src.processing`[m
+[31m-[m
+[31m-### Фильтрация операций по статусу[m
+[31m-[m
+[31m-Функция `filter_by_state` позволяет отбирать операции по полю `state`. По умолчанию фильтрует только выполненные операции (`EXECUTED`).[m
+[31m-[m
+[31m-```python[m
+[31m-from src.processing import filter_by_state[m
+[31m-[m
+[31m-operations = [[m
+[31m-    {'id': 41428829, 'state': 'EXECUTED', 'date': '2019-07-03T18:35:29.512364'},[m
+[31m-    {'id': 939719570, 'state': 'EXECUTED', 'date': '2018-06-30T02:08:58.425572'},[m
+[31m-    {'id': 594226727, 'state': 'CANCELED', 'date': '2018-09-12T21:27:25.241689'}[m
+[31m-][m
+[31m-[m
+[31m-# Получаем только выполненные операции (по умолчанию)[m
+[31m-executed_ops = filter_by_state(operations)[m
+[31m-[m
+[31m-# Получаем только отмененные операции[m
+[31m-canceled_ops = filter_by_state(operations, 'CANCELED')[m
+[31m-[m
+[31m-from src.processing import sort_by_date[m
+[31m-[m
+[31m-# Сортировка по убыванию (новые сначала) — поведение по умолчанию[m
+[31m-newest_first = sort_by_date(operations)[m
+[31m-[m
+[31m-# Сортировка по возрастанию (старые сначала)[m
+[31m-oldest_first = sort_by_date(operations, reverse=False)[m
+[31m-[m
+[32m+[m[32mcd PythonProject7[m[41m [m
+[32m+[m[32m```[m
+\ No newline at end of file[m
