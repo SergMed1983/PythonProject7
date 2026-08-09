@@ -9,9 +9,12 @@ def test_function():
 
 
 if __name__ == "__main__":
+<<<<<<< HEAD
     # Тестирование декоратора
     test_function()
 
     # Основной функционал
+=======
+>>>>>>> 20b21f06fa4b8974ceb1b306040882814838ca09
     text = input("Введите любой текст для реверса: ")
     print(reverse_text(text))
