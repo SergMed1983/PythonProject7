@@ -1,11 +1,10 @@
 """Тесты для модуля external_api."""
 
-import json
-import os
 from unittest.mock import Mock, patch
 
 import pytest
-import requests  # <-- ДОБАВИТЬ ЭТОТ ИМПОРТ
+import requests
+
 from src.external_api import convert_currency
 
 
