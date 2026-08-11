@@ -21,7 +21,8 @@ def convert_currency(transaction: Dict[str, Any]) -> float:
 
     Args:
         transaction (Dict[str, Any]): Словарь с данными о транзакции.
-            Должен содержать ключи 'amount' и 'currency'.
+            Должен содержать вложенную структуру:
+            operationAmount: {amount: str, currency: {code: str}}
 
     Returns:
         float: Сумма транзакции в рублях.
@@ -29,8 +30,12 @@ def convert_currency(transaction: Dict[str, Any]) -> float:
     Raises:
         ValueError: Если отсутствует API ключ или произошла ошибка при запросе.
     """
-    amount = transaction.get("amount")
-    currency = transaction.get("currency")
+    # Правильный доступ к вложенным данным
+    operation_amount = transaction.get("operationAmount", {})
+    amount = operation_amount.get("amount")
+
+    currency_data = operation_amount.get("currency", {})
+    currency = currency_data.get("code")
 
     if not amount or not currency:
         raise ValueError("Транзакция не содержит сумму или валюту")

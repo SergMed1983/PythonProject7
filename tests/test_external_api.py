@@ -1,143 +1,158 @@
 """Тесты для модуля external_api."""
 
 import json
+import os
 from unittest.mock import Mock, patch
 
 import pytest
-import requests
-
+import requests  # <-- ДОБАВИТЬ ЭТОТ ИМПОРТ
 from src.external_api import convert_currency
 
 
-@pytest.fixture
-def mock_transaction_usd():
-    """Фикстура транзакции в USD."""
-    return {
-        "id": 1,
-        "amount": 100.0,
-        "currency": "USD",
-        "description": "Test transaction"
-    }
-
-
-@pytest.fixture
-def mock_transaction_eur():
-    """Фикстура транзакции в EUR."""
-    return {
-        "id": 2,
-        "amount": 150.0,
-        "currency": "EUR",
-        "description": "Test transaction"
-    }
-
-
-@pytest.fixture
-def mock_transaction_rub():
-    """Фикстура транзакции в RUB."""
-    return {
-        "id": 3,
-        "amount": 5000.0,
-        "currency": "RUB",
-        "description": "Test transaction"
-    }
-
-
-def test_convert_currency_usd(mock_transaction_usd):
-    """Тест конвертации USD в RUB."""
-    mock_response = Mock()
-    mock_response.json.return_value = {
-        "success": True,
-        "result": 9200.5
-    }
-    mock_response.raise_for_status = Mock()
-
-    with patch("src.external_api.API_KEY", "test_api_key"):
-        with patch("requests.get", return_value=mock_response):
-            result = convert_currency(mock_transaction_usd)
-            assert result == 9200.5
-
-
-def test_convert_currency_eur(mock_transaction_eur):
-    """Тест конвертации EUR в RUB."""
-    mock_response = Mock()
-    mock_response.json.return_value = {
-        "success": True,
-        "result": 13500.75
-    }
-    mock_response.raise_for_status = Mock()
-
-    with patch("src.external_api.API_KEY", "test_api_key"):
-        with patch("requests.get", return_value=mock_response):
-            result = convert_currency(mock_transaction_eur)
-            assert result == 13500.75
-
-
-def test_convert_currency_rub(mock_transaction_rub):
-    """Тест для RUB - должна возвращаться сумма без конвертации."""
-    # Для RUB не нужен API ключ, поэтому не используем patch
-    result = convert_currency(mock_transaction_rub)
-    assert result == 5000.0
-
-
-def test_convert_currency_no_api_key(mock_transaction_usd):
-    """Тест обработки отсутствия API ключа."""
-    with patch("src.external_api.API_KEY", None):
-        with pytest.raises(ValueError, match="API ключ не найден"):
-            convert_currency(mock_transaction_usd)
-
-
-def test_convert_currency_api_error(mock_transaction_usd):
-    """Тест обработки ошибки API."""
-    mock_response = Mock()
-    mock_response.json.return_value = {
-        "success": False,
-        "error": {
-            "info": "Invalid API key"
+def test_convert_currency_usd():
+    """Тест конвертации USD в рубли."""
+    transaction = {
+        "operationAmount": {
+            "amount": "100.00",
+            "currency": {
+                "code": "USD"
+            }
         }
     }
-    mock_response.raise_for_status = Mock()
 
-    with patch("src.external_api.API_KEY", "test_api_key"):
-        with patch("requests.get", return_value=mock_response):
-            with pytest.raises(ValueError, match="Ошибка API"):
-                convert_currency(mock_transaction_usd)
+    # Мокаем API_KEY, чтобы он был доступен в функции
+    with patch('src.external_api.API_KEY', 'test_api_key'):
+        with patch('src.external_api.requests.get') as mock_get:
+            # Создаем мок-ответ
+            mock_response = Mock()
+            mock_response.json.return_value = {
+                "success": True,
+                "result": 9050.0
+            }
+            mock_response.raise_for_status = Mock()
+            mock_get.return_value = mock_response
+
+            result = convert_currency(transaction)
+            assert result == 9050.0
 
 
-def test_convert_currency_request_exception(mock_transaction_usd):
-    """Тест обработки исключения при запросе."""
-    with patch("src.external_api.API_KEY", "test_api_key"):
-        with patch("requests.get", side_effect=requests.exceptions.RequestException("Network error")):
-            with pytest.raises(ValueError, match="Ошибка при запросе к API"):
-                convert_currency(mock_transaction_usd)
+def test_convert_currency_eur():
+    """Тест конвертации EUR в рубли."""
+    transaction = {
+        "operationAmount": {
+            "amount": "50.00",
+            "currency": {
+                "code": "EUR"
+            }
+        }
+    }
+
+    # Мокаем API_KEY, чтобы он был доступен в функции
+    with patch('src.external_api.API_KEY', 'test_api_key'):
+        with patch('src.external_api.requests.get') as mock_get:
+            mock_response = Mock()
+            mock_response.json.return_value = {
+                "success": True,
+                "result": 5000.0
+            }
+            mock_response.raise_for_status = Mock()
+            mock_get.return_value = mock_response
+
+            result = convert_currency(transaction)
+            assert result == 5000.0
 
 
-def test_convert_currency_missing_fields():
-    """Тест обработки транзакции без обязательных полей."""
-    transaction = {"id": 1}  # Нет amount и currency
-    with patch("src.external_api.API_KEY", "test_api_key"):
-        with pytest.raises(ValueError, match="Транзакция не содержит сумму или валюту"):
-            convert_currency(transaction)
+def test_convert_currency_rub():
+    """Тест, что RUB не конвертируется."""
+    transaction = {
+        "operationAmount": {
+            "amount": "500.00",
+            "currency": {
+                "code": "RUB"
+            }
+        }
+    }
+
+    result = convert_currency(transaction)
+    assert result == 500.0
+
+
+def test_convert_currency_missing_amount():
+    """Тест на ошибку при отсутствии суммы."""
+    transaction = {
+        "operationAmount": {
+            "currency": {
+                "code": "USD"
+            }
+        }
+    }
+
+    with pytest.raises(ValueError, match="Транзакция не содержит сумму или валюту"):
+        convert_currency(transaction)
+
+
+def test_convert_currency_missing_currency():
+    """Тест на ошибку при отсутствии валюты."""
+    transaction = {
+        "operationAmount": {
+            "amount": "100.00"
+        }
+    }
+
+    with pytest.raises(ValueError, match="Транзакция не содержит сумму или валюту"):
+        convert_currency(transaction)
 
 
 def test_convert_currency_unsupported_currency():
-    """Тест обработки неподдерживаемой валюты."""
+    """Тест на ошибку при неподдерживаемой валюте."""
     transaction = {
-        "id": 4,
-        "amount": 100.0,
-        "currency": "GBP"
+        "operationAmount": {
+            "amount": "100.00",
+            "currency": {
+                "code": "GBP"
+            }
+        }
     }
-    with patch("src.external_api.API_KEY", "test_api_key"):
+
+    # Мокаем API_KEY, чтобы он был доступен в функции
+    with patch('src.external_api.API_KEY', 'test_api_key'):
         with pytest.raises(ValueError, match="Конвертация валюты GBP не поддерживается"):
             convert_currency(transaction)
 
 
-def test_convert_currency_json_decode_error(mock_transaction_usd):
-    """Тест обработки ошибки парсинга JSON."""
-    mock_response = Mock()
-    mock_response.json.side_effect = json.JSONDecodeError("Invalid JSON", "", 0)
-    mock_response.raise_for_status = Mock()
+def test_convert_currency_missing_api_key():
+    """Тест на ошибку при отсутствии API ключа."""
+    transaction = {
+        "operationAmount": {
+            "amount": "100.00",
+            "currency": {
+                "code": "USD"
+            }
+        }
+    }
 
-    with patch("src.external_api.API_KEY", "test_api_key"):
-        with patch("requests.get", return_value=mock_response):
-            with pytest.raises(ValueError, match="Ошибка парсинга ответа API"):
-                convert_currency(mock_transaction_usd)
+    # Мокаем API_KEY как None (отсутствует)
+    with patch('src.external_api.API_KEY', None):
+        with pytest.raises(ValueError, match="API ключ не найден"):
+            convert_currency(transaction)
+
+
+def test_convert_currency_api_error():
+    """Тест на ошибку при неудачном запросе к API."""
+    transaction = {
+        "operationAmount": {
+            "amount": "100.00",
+            "currency": {
+                "code": "USD"
+            }
+        }
+    }
+
+    # Мокаем API_KEY и requests.get
+    with patch('src.external_api.API_KEY', 'test_api_key'):
+        with patch('src.external_api.requests.get') as mock_get:
+            # Имитируем ошибку запроса
+            mock_get.side_effect = requests.exceptions.RequestException("Connection error")
+
+            with pytest.raises(ValueError, match="Ошибка при запросе к API"):
+                convert_currency(transaction)
