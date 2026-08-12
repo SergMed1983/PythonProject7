@@ -1,0 +1,8 @@
+2026-08-07 21:50:35,905 - src.decorators.log_decorator - INFO - Start: main
+2026-08-07 21:50:35,907 - src.decorators.log_decorator - INFO - End: main -> OK
+2026-08-07 22:00:48,632 - src.decorators.log_decorator - INFO - Start: main
+2026-08-07 22:00:48,634 - src.decorators.log_decorator - INFO - End: main -> OK
+2026-08-07 22:34:36,048 - src.decorators.log_decorator - INFO - Start: main
+2026-08-07 22:34:36,049 - src.decorators.log_decorator - INFO - End: main -> OK
+2026-08-07 22:34:54,856 - src.decorators.log_decorator - INFO - Start: main
+2026-08-07 22:34:54,857 - src.decorators.log_decorator - INFO - End: main -> OK
