@@ -22,7 +22,14 @@ def convert_currency(transaction: Dict[str, Any]) -> float:
     Args:
         transaction (Dict[str, Any]): Словарь с данными о транзакции.
             Должен содержать вложенную структуру:
-            operationAmount: {amount: str, currency: {code: str}}
+            {
+                "operationAmount": {
+                    "amount": "100.00",
+                    "currency": {
+                        "code": "USD"
+                    }
+                }
+            }
 
     Returns:
         float: Сумма транзакции в рублях.
@@ -30,7 +37,7 @@ def convert_currency(transaction: Dict[str, Any]) -> float:
     Raises:
         ValueError: Если отсутствует API ключ или произошла ошибка при запросе.
     """
-    # Правильный доступ к вложенным данным
+    # Правильный доступ к вложенным данным согласно структуре operations.json
     operation_amount = transaction.get("operationAmount", {})
     amount = operation_amount.get("amount")
 
@@ -85,3 +92,5 @@ def convert_currency(transaction: Dict[str, Any]) -> float:
         raise ValueError(f"Ошибка при запросе к API: {e}")
     except json.JSONDecodeError as e:
         raise ValueError(f"Ошибка парсинга ответа API: {e}")
+
+# <-- ВОТ ЗДЕСЬ ДОЛЖНА БЫТЬ ПУСТАЯ СТРОКА!
