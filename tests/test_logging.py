@@ -1,7 +1,8 @@
 """Тесты для проверки логирования в модулях masks и utils."""
 
 import os
-from src.masks import mask_card_number, mask_account_number
+
+from src.masks import mask_account_number, mask_card_number
 from src.utils import read_json_file
 
 
@@ -29,12 +30,12 @@ def test_log_files_created():
     # Вызываем функции, чтобы создать логи
     try:
         mask_card_number("1234567890123456")
-    except:
+    except Exception:
         pass
 
     try:
         read_json_file("nonexistent.json")
-    except:
+    except Exception:
         pass
 
     # Проверяем, что файлы логов созданы

@@ -8,7 +8,7 @@ from typing import Any, Dict, List
 from src.logger_config import setup_logger
 
 # Создаем логгер для модуля utils
-logger = setup_logger('utils', 'utils.log', logging.DEBUG)
+logger = setup_logger("utils", "utils.log", logging.DEBUG)
 
 
 def read_json_file(file_path: str) -> List[Dict[str, Any]]:
@@ -49,14 +49,12 @@ def read_json_file(file_path: str) -> List[Dict[str, Any]]:
 
     except json.JSONDecodeError as e:
         logger.error(
-            f"Ошибка декодирования JSON в файле {file_path}: {e}",
-            exc_info=True
+            f"Ошибка декодирования JSON в файле {file_path}: {e}", exc_info=True
         )
         return []
 
     except Exception as e:
         logger.error(
-            f"Неожиданная ошибка при чтении файла {file_path}: {e}",
-            exc_info=True
+            f"Неожиданная ошибка при чтении файла {file_path}: {e}", exc_info=True
         )
         return []

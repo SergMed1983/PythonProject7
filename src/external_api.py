@@ -62,14 +62,8 @@ def convert_currency(transaction: Dict[str, Any]) -> float:
     try:
         # Формируем запрос к API
         url = BASE_URL
-        params = {
-            "from": currency.upper(),
-            "to": "RUB",
-            "amount": amount
-        }
-        headers = {
-            "apikey": API_KEY
-        }
+        params = {"from": currency.upper(), "to": "RUB", "amount": amount}
+        headers = {"apikey": API_KEY}
 
         response = requests.get(url, params=params, headers=headers)
         response.raise_for_status()
@@ -92,5 +86,6 @@ def convert_currency(transaction: Dict[str, Any]) -> float:
         raise ValueError(f"Ошибка при запросе к API: {e}")
     except json.JSONDecodeError as e:
         raise ValueError(f"Ошибка парсинга ответа API: {e}")
+
 
 # <-- ВОТ ЗДЕСЬ ДОЛЖНА БЫТЬ ПУСТАЯ СТРОКА!

@@ -10,7 +10,7 @@ def test_read_json_file_success():
     """Тест успешного чтения JSON файла."""
     test_data = [
         {"id": 1, "amount": 100, "currency": "USD"},
-        {"id": 2, "amount": 200, "currency": "EUR"}
+        {"id": 2, "amount": 200, "currency": "EUR"},
     ]
     mock_json = json.dumps(test_data)
 

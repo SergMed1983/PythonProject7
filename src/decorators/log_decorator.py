@@ -12,6 +12,7 @@ def log(filename: Optional[str] = None) -> Callable:
     При ошибке выводит: "<имя_функции> error:
     <тип_ошибки>. Inputs: <args>, <kwargs>"
     """
+
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -23,11 +24,11 @@ def log(filename: Optional[str] = None) -> Callable:
 
             handler: Union[logging.FileHandler, logging.StreamHandler]
             if filename:
-                handler = logging.FileHandler(filename, encoding='utf-8')
+                handler = logging.FileHandler(filename, encoding="utf-8")
             else:
                 handler = logging.StreamHandler(sys.stdout)
 
-            formatter = logging.Formatter('%(message)s')
+            formatter = logging.Formatter("%(message)s")
             handler.setFormatter(formatter)
             logger.addHandler(handler)
             logger.propagate = False
@@ -45,4 +46,5 @@ def log(filename: Optional[str] = None) -> Callable:
                 raise
 
         return wrapper
+
     return decorator

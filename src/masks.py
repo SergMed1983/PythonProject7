@@ -3,7 +3,7 @@ import logging
 from src.logger_config import setup_logger
 
 # Создаем логгер для модуля masks
-logger = setup_logger('masks', 'masks.log', logging.DEBUG)
+logger = setup_logger("masks", "masks.log", logging.DEBUG)
 
 
 def mask_card_number(card_number: str) -> str:

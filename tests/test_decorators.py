@@ -5,6 +5,7 @@ from src.decorators import log
 
 def test_log_to_console_success(capsys):
     """Тест успешного выполнения с выводом в консоль."""
+
     @log()
     def add(a, b):
         return a + b
@@ -16,6 +17,7 @@ def test_log_to_console_success(capsys):
 
 def test_log_to_console_error(capsys):
     """Тест ошибки с выводом в консоль."""
+
     @log()
     def divide(a, b):
         return a / b
@@ -30,6 +32,7 @@ def test_log_to_console_error(capsys):
 
 def test_log_with_kwargs(capsys):
     """Тест функции с именованными аргументами."""
+
     @log()
     def greet(name, greeting="Hello"):
         return f"{greeting}, {name}!"

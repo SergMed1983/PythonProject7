@@ -1,4 +1,4 @@
-def filter_by_state(list_dict: list, state: str = 'EXECUTED') -> list:
+def filter_by_state(list_dict: list, state: str = "EXECUTED") -> list:
     """
     Фильтрует список словарей по значению ключа 'state'.
 
@@ -9,7 +9,7 @@ def filter_by_state(list_dict: list, state: str = 'EXECUTED') -> list:
     Возвращает:
         Отфильтрованный список словарей
     """
-    return [item for item in list_dict if item.get('state') == state]
+    return [item for item in list_dict if item.get("state") == state]
 
 
 def sort_by_date(list_dict: list, ascending: bool = True) -> list:
@@ -23,8 +23,4 @@ def sort_by_date(list_dict: list, ascending: bool = True) -> list:
     Возвращает:
         Отсортированный список словарей
     """
-    return sorted(
-        list_dict,
-        key=lambda x: x.get('date', ''),
-        reverse=not ascending
-    )
+    return sorted(list_dict, key=lambda x: x.get("date", ""), reverse=not ascending)

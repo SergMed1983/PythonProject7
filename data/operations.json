@@ -1,0 +1,26 @@
+[
+    {
+        "id": 1,
+        "date": "2023-01-01T10:00:00",
+        "description": "Перевод другу",
+        "operationAmount": {
+            "amount": "100.00",
+            "currency": {
+                "name": "USD",
+                "code": "USD"
+            }
+        }
+    },
+    {
+        "id": 2,
+        "date": "2023-01-02T11:00:00",
+        "description": "Покупка в магазине",
+        "operationAmount": {
+            "amount": "50.00",
+            "currency": {
+                "name": "EUR",
+                "code": "EUR"
+            }
+        }
+    }
+]
