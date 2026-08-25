@@ -11,81 +11,48 @@ from src.processing import (
     filter_by_state,
     search_transactions_by_description,
     sort_by_date,
+    read_csv_transactions,      # Добавляем импорт
+    read_json_transactions,     # Добавляем импорт
 )
 from src.text_utils import reverse_text
 
 # ============ СУЩЕСТВУЮЩИЙ ФУНКЦИОНАЛ ============
-
 
 @log()
 def test_function():
     """Тестовая функция для проверки декоратора."""
     print("Тестовая функция")
 
-
 def run_text_reverser():
     """Запускает функционал реверса текста."""
     text = input("Введите любой текст для реверса: ")
     print(reverse_text(text))
-
 
 # ============ НОВЫЙ ФУНКЦИОНАЛ ДЛЯ ДЗ 13.2 ============
 
 def load_transactions_from_json(filepath: str) -> List[Dict[str, Any]]:
     """
     Загружает транзакции из JSON-файла.
-
-    Аргументы:
-        filepath (str): Путь к JSON-файлу.
-
-    Возвращает:
-        List[Dict[str, Any]]: Список транзакций.
+    Использует функцию из processing.py
     """
-    try:
-        with open(filepath, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError) as e:
-        print(f"Ошибка загрузки JSON: {e}")
-        return []
-
+    transactions = read_json_transactions(filepath)
+    if not transactions:
+        print(f"Файл {filepath} не найден или пуст.")
+    return transactions
 
 def load_transactions_from_csv(filepath: str) -> List[Dict[str, Any]]:
     """
     Загружает транзакции из CSV-файла.
-
-    Аргументы:
-        filepath (str): Путь к CSV-файлу.
-
-    Возвращает:
-        List[Dict[str, Any]]: Список транзакций.
+    Использует функцию из processing.py
     """
-    try:
-        import csv
-        transactions = []
-        with open(filepath, "r", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                # Преобразуем строки в нужные типы
-                if "amount" in row:
-                    row["amount"] = float(row["amount"])
-                if "id" in row:
-                    row["id"] = int(row["id"])
-                transactions.append(row)
-        return transactions
-    except (FileNotFoundError, Exception) as e:
-        print(f"Ошибка загрузки CSV: {e}")
-        return []
-
+    transactions = read_csv_transactions(filepath)
+    if not transactions:
+        print(f"Файл {filepath} не найден или пуст.")
+    return transactions
 
 def load_transactions_from_xlsx(filepath: str) -> List[Dict[str, Any]]:
     """
     Загружает транзакции из XLSX-файла.
-
-    Аргументы:
-        filepath (str): Путь к XLSX-файлу.
-
-    Возвращает:
-        List[Dict[str, Any]]: Список транзакций.
     """
     try:
         from openpyxl import load_workbook
@@ -116,13 +83,9 @@ def load_transactions_from_xlsx(filepath: str) -> List[Dict[str, Any]]:
         print(f"Ошибка загрузки XLSX: {e}")
         return []
 
-
 def generate_test_transactions() -> List[Dict[str, Any]]:
     """
     Генерирует тестовый набор транзакций для демонстрации.
-
-    Возвращает:
-        List[Dict[str, Any]]: Список тестовых транзакций.
     """
     return [
         {
@@ -167,28 +130,17 @@ def generate_test_transactions() -> List[Dict[str, Any]]:
         },
     ]
 
-
 def filter_ruble_transactions(
     transactions: List[Dict[str, Any]]
 ) -> List[Dict[str, Any]]:
     """
     Оставляет только рублевые транзакции.
-
-    Аргументы:
-        transactions (List[Dict[str, Any]]): Список транзакций.
-
-    Возвращает:
-        List[Dict[str, Any]]: Список только рублевых транзакций.
     """
     return [tx for tx in transactions if tx.get("currency", "").lower() == "руб."]
-
 
 def print_transactions(transactions: List[Dict[str, Any]]) -> None:
     """
     Красиво выводит список транзакций в консоль.
-
-    Аргументы:
-        transactions (List[Dict[str, Any]]): Список транзакций для вывода.
     """
     if not transactions:
         print("\nНе найдено ни одной транзакции, подходящей под ваши условия фильтрации")
@@ -205,7 +157,6 @@ def print_transactions(transactions: List[Dict[str, Any]]) -> None:
         print(f"{date} {desc}")
         print(f"Сумма: {amount} {currency}")
         print("-" * 60)
-
 
 def run_bank_processor():
     """
@@ -301,7 +252,6 @@ def run_bank_processor():
     print("\nРаспечатываю итоговый список транзакций...")
     print_transactions(transactions)
 
-
 def main():
     """
     Основная функция программы.
@@ -317,14 +267,11 @@ def main():
     if mode == "1":
         run_bank_processor()
     elif mode == "2":
-        # Тестирование декоратора
         test_function()
-        # Реверс текста
         run_text_reverser()
     else:
         print("Неверный выбор. Запускаю режим работы с банковскими транзакциями.")
         run_bank_processor()
-
 
 if __name__ == "__main__":
     main()

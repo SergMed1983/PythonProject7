@@ -76,7 +76,8 @@ def test_count_transactions_by_categories():
 
 def test_read_csv_transactions():
     """Тест: чтение CSV файла."""
-    transactions = read_csv_transactions("../данные/transactions.csv")
+    # Измени путь с "../данные/transactions.csv" на "данные/transactions.csv"
+    transactions = read_csv_transactions("данные/transactions.csv")
     assert len(transactions) > 0
     assert "id" in transactions[0]
     assert "description" in transactions[0]
@@ -84,7 +85,8 @@ def test_read_csv_transactions():
 
 def test_read_json_transactions():
     """Тест: чтение JSON файла."""
-    transactions = read_json_transactions("../данные/transactions.json")
+    # Измени путь с "../данные/transactions.json" на "данные/transactions.json"
+    transactions = read_json_transactions("данные/transactions.json")
     assert len(transactions) > 0
     assert "id" in transactions[0]
     assert "description" in transactions[0]
