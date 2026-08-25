@@ -3,50 +3,25 @@
 Содержит функции для фильтрации, сортировки, поиска и подсчета.
 """
 
+import csv
+import json
 import re
 from collections import Counter
 from typing import Any, Dict, List
 
 # ============ ФУНКЦИИ ИЗ ДЗ 13.1 ============
 
-
 def filter_by_state(list_dict: list, state: str = "EXECUTED") -> list:
     """
     Фильтрует список словарей по значению ключа 'state'.
-
-    Аргументы:
-        list_dict: Список словарей для фильтрации
-        state: Значение state для фильтрации (по умолчанию 'EXECUTED')
-
-    Возвращает:
-        Отфильтрованный список словарей
-
-    Пример:
-        >>> data = [{"id": 1, "state": "EXECUTED"}, {"id": 2, "state": "CANCELED"}]
-        >>> filter_by_state(data, "EXECUTED")
-        [{"id": 1, "state": "EXECUTED"}]
     """
     return [item for item in list_dict if item.get("state") == state]
-
 
 def sort_by_date(list_dict: list, ascending: bool = True) -> list:
     """
     Сортирует список словарей по ключу 'date'.
-
-    Аргументы:
-        list_dict: Список словарей для сортировки
-        ascending: Если True - по возрастанию, False - по убыванию
-
-    Возвращает:
-        Отсортированный список словарей
-
-    Пример:
-        >>> data = [{"date": "2023-01-02"}, {"date": "2023-01-01"}]
-        >>> sort_by_date(data, ascending=True)
-        [{"date": "2023-01-01"}, {"date": "2023-01-02"}]
     """
     return sorted(list_dict, key=lambda x: x.get("date", ""), reverse=not ascending)
-
 
 # ============ НОВЫЕ ФУНКЦИИ ДЛЯ ДЗ 13.2 ============
 
@@ -55,49 +30,18 @@ def search_transactions_by_description(
 ) -> List[Dict[str, Any]]:
     """
     Ищет транзакции, в описании которых содержится искомая строка.
-
-    Функция использует библиотеку re для регистронезависимого поиска подстроки
-    в поле 'description' каждой транзакции.
-
-    Аргументы:
-        transactions (List[Dict[str, Any]]): Список словарей с данными о транзакциях.
-        search_string (str): Строка для поиска в описании.
-
-    Возвращает:
-        List[Dict[str, Any]]: Список транзакций, у которых в описании есть искомая строка.
-
-    Пример:
-        >>> data = [{"description": "Перевод организации"}, {"description": "Оплата услуг"}]
-        >>> search_transactions_by_description(data, "организации")
-        [{"description": "Перевод организации"}]
     """
     if not search_string:
         return transactions
 
-    # Используем re для регистронезависимого поиска
     pattern = re.compile(re.escape(search_string), re.IGNORECASE)
     return [tx for tx in transactions if pattern.search(tx.get("description", ""))]
-
 
 def count_transactions_by_categories(
     transactions: List[Dict[str, Any]], categories: List[str]
 ) -> Dict[str, int]:
     """
     Подсчитывает количество транзакций по заданным категориям.
-
-    Функция использует Counter из библиотеки collections.
-
-    Аргументы:
-        transactions (List[Dict[str, Any]]): Список словарей с данными о транзакциях.
-        categories (List[str]): Список категорий для подсчета.
-
-    Возвращает:
-        Dict[str, int]: Словарь с количеством транзакций по каждой категории.
-
-    Пример:
-        >>> data = [{"description": "Оплата еды"}, {"description": "Транспорт"}]
-        >>> count_transactions_by_categories(data, ["еда", "транспорт"])
-        {'еда': 1, 'транспорт': 1}
     """
     # Инициализируем счетчик
     counter = Counter()
@@ -106,11 +50,66 @@ def count_transactions_by_categories(
     for category in categories:
         counter[category] = 0
 
-    # Подсчитываем транзакции по категориям (регистронезависимо)
+    # Подсчитываем транзакции по категориям (используем поле 'category')
     for transaction in transactions:
-        description = transaction.get("description", "").lower()
+        # Получаем категорию из транзакции
+        transaction_category = transaction.get("category", "").lower()
+
+        # Проверяем, есть ли категория в списке для подсчета
         for category in categories:
-            if category.lower() in description:
+            # Ищем категорию в описании ИЛИ в поле category
+            if (transaction_category and transaction_category == category.lower()) or \
+               (category.lower() in transaction.get("description", "").lower()):
                 counter[category] += 1
+                break  # Чтобы не считать одну транзакцию несколько раз
 
     return dict(counter)
+
+# ============ ФУНКЦИИ ДЛЯ ЧТЕНИЯ ФАЙЛОВ ============
+
+def read_csv_transactions(filename: str) -> List[Dict[str, Any]]:
+    """
+    Чтение транзакций из CSV файла.
+    """
+    transactions = []
+    try:
+        with open(filename, 'r', encoding='utf-8') as file:
+            # Пробуем разные разделители
+            reader = csv.DictReader(file, delimiter=';')
+            for row in reader:
+                # Очищаем значения от лишних пробелов
+                cleaned_row = {key.strip(): value.strip() for key, value in row.items()}
+                transactions.append(cleaned_row)
+        return transactions
+    except FileNotFoundError:
+        print(f"Ошибка: Файл {filename} не найден")
+        return []
+    except Exception as e:
+        print(f"Ошибка при чтении CSV файла: {e}")
+        return []
+
+def read_json_transactions(filename: str) -> List[Dict[str, Any]]:
+    """
+    Чтение транзакций из JSON файла.
+    """
+    try:
+        with open(filename, 'r', encoding='utf-8') as file:
+            data = json.load(file)
+            # Если данные - это список, возвращаем его
+            if isinstance(data, list):
+                return data
+            # Если данные - это словарь с ключом 'transactions'
+            elif isinstance(data, dict) and 'transactions' in data:
+                return data['transactions']
+            else:
+                print(f"Ошибка: Неверный формат JSON в файле {filename}")
+                return []
+    except FileNotFoundError:
+        print(f"Ошибка: Файл {filename} не найден")
+        return []
+    except json.JSONDecodeError as e:
+        print(f"Ошибка при чтении JSON файла: {e}")
+        return []
+    except Exception as e:
+        print(f"Неизвестная ошибка при чтении JSON файла: {e}")
+        return []
