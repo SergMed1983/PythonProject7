@@ -9,6 +9,7 @@ import re
 from collections import Counter
 from typing import Any, Dict, List
 
+
 # ============ ФУНКЦИИ ИЗ ДЗ 13.1 ============
 
 def filter_by_state(list_dict: list, state: str = "EXECUTED") -> list:
@@ -17,11 +18,13 @@ def filter_by_state(list_dict: list, state: str = "EXECUTED") -> list:
     """
     return [item for item in list_dict if item.get("state") == state]
 
+
 def sort_by_date(list_dict: list, ascending: bool = True) -> list:
     """
     Сортирует список словарей по ключу 'date'.
     """
     return sorted(list_dict, key=lambda x: x.get("date", ""), reverse=not ascending)
+
 
 # ============ НОВЫЕ ФУНКЦИИ ДЛЯ ДЗ 13.2 ============
 
@@ -37,47 +40,39 @@ def search_transactions_by_description(
     pattern = re.compile(re.escape(search_string), re.IGNORECASE)
     return [tx for tx in transactions if pattern.search(tx.get("description", ""))]
 
+
 def count_transactions_by_categories(
     transactions: List[Dict[str, Any]], categories: List[str]
 ) -> Dict[str, int]:
     """
     Подсчитывает количество транзакций по заданным категориям.
+    Использует поле 'category' для подсчета.
     """
     # Инициализируем счетчик
-    counter: Counter = Counter()  # ✅ Добавлена аннотация типа
+    counter: Counter = Counter()
 
     # Устанавливаем начальные значения для всех категорий
     for category in categories:
         counter[category] = 0
 
-    # Подсчитываем транзакции по категориям (используем поле 'category')
+    # Подсчитываем транзакции по категориям (регистронезависимо)
     for transaction in transactions:
-        # Получаем категорию из транзакции
         transaction_category = transaction.get("category", "").lower()
-
-        # Проверяем, есть ли категория в списке для подсчета
         for category in categories:
-            # Ищем категорию в описании ИЛИ в поле category
-            if (transaction_category and transaction_category == category.lower()) or \
-               (category.lower() in transaction.get("description", "").lower()):
+            if transaction_category == category.lower():
                 counter[category] += 1
                 break  # Чтобы не считать одну транзакцию несколько раз
 
     return dict(counter)
 
-# ============ ФУНКЦИИ ДЛЯ ЧТЕНИЯ ФАЙЛОВ ============
 
 def read_csv_transactions(filename: str) -> List[Dict[str, Any]]:
-    """
-    Чтение транзакций из CSV файла.
-    """
+    """Чтение транзакций из CSV файла."""
     transactions = []
     try:
         with open(filename, 'r', encoding='utf-8') as file:
-            # Пробуем разные разделители
             reader = csv.DictReader(file, delimiter=';')
             for row in reader:
-                # Очищаем значения от лишних пробелов
                 cleaned_row = {key.strip(): value.strip() for key, value in row.items()}
                 transactions.append(cleaned_row)
         return transactions
@@ -88,17 +83,14 @@ def read_csv_transactions(filename: str) -> List[Dict[str, Any]]:
         print(f"Ошибка при чтении CSV файла: {e}")
         return []
 
+
 def read_json_transactions(filename: str) -> List[Dict[str, Any]]:
-    """
-    Чтение транзакций из JSON файла.
-    """
+    """Чтение транзакций из JSON файла."""
     try:
         with open(filename, 'r', encoding='utf-8') as file:
             data = json.load(file)
-            # Если данные - это список, возвращаем его
             if isinstance(data, list):
                 return data
-            # Если данные - это словарь с ключом 'transactions'
             elif isinstance(data, dict) and 'transactions' in data:
                 return data['transactions']
             else:
