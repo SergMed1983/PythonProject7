@@ -9,7 +9,6 @@ import re
 from collections import Counter
 from typing import Any, Dict, List
 
-
 # ============ ФУНКЦИИ ИЗ ДЗ 13.1 ============
 
 def filter_by_state(list_dict: list, state: str = "EXECUTED") -> list:

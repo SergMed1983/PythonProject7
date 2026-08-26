@@ -1,6 +1,7 @@
 ﻿"""
 Главный модуль приложения.
-Содержит функционал для работы с банковскими транзакциями и другие утилиты.
+Содержит функционал для работы с банковскими
+транзакциями и другие утилиты.
 """
 
 from typing import Any, Dict, List  # Убрал import json
@@ -8,13 +9,12 @@ from typing import Any, Dict, List  # Убрал import json
 from src.decorators.log_decorator import log
 from src.processing import (
     filter_by_state,
-    search_transactions_by_description,
-    sort_by_date,
     read_csv_transactions,
     read_json_transactions,
+    search_transactions_by_description,
+    sort_by_date,
 )
 from src.text_utils import reverse_text
-
 
 # ============ СУЩЕСТВУЮЩИЙ ФУНКЦИОНАЛ ============
 
@@ -24,13 +24,13 @@ def test_function():
     print("Тестовая функция")
 
 
-def run_text_reverser():
+def run_text_reverser():  # ← ✅ Теперь 2 пустые строки!
     """Запускает функционал реверса текста."""
     text = input("Введите любой текст для реверса: ")
     print(reverse_text(text))
 
-
 # ============ НОВЫЙ ФУНКЦИОНАЛ ДЛЯ ДЗ 13.2 ============
+
 
 def load_transactions_from_json(filepath: str) -> List[Dict[str, Any]]:
     """
