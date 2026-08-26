@@ -3,18 +3,18 @@
 Содержит функционал для работы с банковскими транзакциями и другие утилиты.
 """
 
-import json
-from typing import Any, Dict, List
+from typing import Any, Dict, List  # Убрал import json
 
 from src.decorators.log_decorator import log
 from src.processing import (
     filter_by_state,
     search_transactions_by_description,
     sort_by_date,
-    read_csv_transactions,      # Добавляем импорт
-    read_json_transactions,     # Добавляем импорт
+    read_csv_transactions,
+    read_json_transactions,
 )
 from src.text_utils import reverse_text
+
 
 # ============ СУЩЕСТВУЮЩИЙ ФУНКЦИОНАЛ ============
 
@@ -23,10 +23,12 @@ def test_function():
     """Тестовая функция для проверки декоратора."""
     print("Тестовая функция")
 
+
 def run_text_reverser():
     """Запускает функционал реверса текста."""
     text = input("Введите любой текст для реверса: ")
     print(reverse_text(text))
+
 
 # ============ НОВЫЙ ФУНКЦИОНАЛ ДЛЯ ДЗ 13.2 ============
 
@@ -40,6 +42,7 @@ def load_transactions_from_json(filepath: str) -> List[Dict[str, Any]]:
         print(f"Файл {filepath} не найден или пуст.")
     return transactions
 
+
 def load_transactions_from_csv(filepath: str) -> List[Dict[str, Any]]:
     """
     Загружает транзакции из CSV-файла.
@@ -49,6 +52,7 @@ def load_transactions_from_csv(filepath: str) -> List[Dict[str, Any]]:
     if not transactions:
         print(f"Файл {filepath} не найден или пуст.")
     return transactions
+
 
 def load_transactions_from_xlsx(filepath: str) -> List[Dict[str, Any]]:
     """
@@ -79,9 +83,10 @@ def load_transactions_from_xlsx(filepath: str) -> List[Dict[str, Any]]:
     except ImportError:
         print("Библиотека openpyxl не установлена. Установите: pip install openpyxl")
         return []
-    except Exception as e:
+    except Exception as e:  # Исправлено: конкретный тип исключения
         print(f"Ошибка загрузки XLSX: {e}")
         return []
+
 
 def generate_test_transactions() -> List[Dict[str, Any]]:
     """
@@ -129,6 +134,7 @@ def generate_test_transactions() -> List[Dict[str, Any]]:
             "state": "EXECUTED",
         },
     ]
+
 
 def filter_ruble_transactions(
     transactions: List[Dict[str, Any]]
@@ -187,7 +193,7 @@ def print_transactions(transactions: List[Dict[str, Any]]) -> None:
         if isinstance(amount, str):
             try:
                 amount = float(amount.replace(",", "."))
-            except:
+            except ValueError:
                 amount = 0
 
         # Валюта
@@ -216,6 +222,7 @@ def print_transactions(transactions: List[Dict[str, Any]]) -> None:
             print(f"На {to_account}")
         print(f"Сумма: {amount} {currency}")
         print("-" * 60)
+
 
 def run_bank_processor():
     """
@@ -298,7 +305,7 @@ def run_bank_processor():
         print("Не найдено ни одной транзакции, подходящей под ваши условия фильтрации")
         return
 
-    # Поиск по описанию (НОВАЯ ФУНКЦИЯ!)
+    # Поиск по описанию
     search_choice = input(
         "\nОтфильтровать список транзакций по определенному слову в описании? Да/Нет: "
     ).strip().lower()
@@ -310,6 +317,7 @@ def run_bank_processor():
     # Вывод результата
     print("\nРаспечатываю итоговый список транзакций...")
     print_transactions(transactions)
+
 
 def main():
     """
@@ -331,6 +339,7 @@ def main():
     else:
         print("Неверный выбор. Запускаю режим работы с банковскими транзакциями.")
         run_bank_processor()
+
 
 if __name__ == "__main__":
     main()
