@@ -44,7 +44,7 @@ def count_transactions_by_categories(
     Подсчитывает количество транзакций по заданным категориям.
     """
     # Инициализируем счетчик
-    counter = Counter()
+    counter: Counter = Counter()  # ✅ Добавлена аннотация типа
 
     # Устанавливаем начальные значения для всех категорий
     for category in categories:
