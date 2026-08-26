@@ -47,20 +47,17 @@ def count_transactions_by_categories(
     Подсчитывает количество транзакций по заданным категориям.
     Использует поле 'category' для подсчета.
     """
-    # Инициализируем счетчик
     counter: Counter = Counter()
 
-    # Устанавливаем начальные значения для всех категорий
     for category in categories:
         counter[category] = 0
 
-    # Подсчитываем транзакции по категориям (регистронезависимо)
     for transaction in transactions:
         transaction_category = transaction.get("category", "").lower()
         for category in categories:
             if transaction_category == category.lower():
                 counter[category] += 1
-                break  # Чтобы не считать одну транзакцию несколько раз
+                break
 
     return dict(counter)
 
