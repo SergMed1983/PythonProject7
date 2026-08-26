@@ -138,9 +138,32 @@ def filter_ruble_transactions(
     """
     return [tx for tx in transactions if tx.get("currency", "").lower() == "руб."]
 
+
+def mask_card_number(card_number: str) -> str:
+    """
+    Маскирует номер карты или счета.
+    Для карты: 1234 5678 9012 3456 -> 1234 56** **** 3456
+    Для счета: 12345678901234567890 -> **7890
+    """
+    if not card_number or not isinstance(card_number, str):
+        return card_number
+
+    # Убираем пробелы
+    clean = card_number.replace(" ", "")
+
+    if len(clean) == 16:
+        # Карта: первые 6 цифр, 4 звезды, последние 4 цифры
+        return f"{clean[:4]} {clean[4:6]}** **** {clean[12:]}"
+    elif len(clean) > 16:
+        # Счет: показываем только последние 4 цифры
+        return f"**{clean[-4:]}"
+    else:
+        return card_number
+
+
 def print_transactions(transactions: List[Dict[str, Any]]) -> None:
     """
-    Красиво выводит список транзакций в консоль.
+    Красиво выводит список транзакций с маскировкой.
     """
     if not transactions:
         print("\nНе найдено ни одной транзакции, подходящей под ваши условия фильтрации")
@@ -150,11 +173,47 @@ def print_transactions(transactions: List[Dict[str, Any]]) -> None:
     print("-" * 60)
 
     for tx in transactions:
+        # Форматирование даты (убираем время)
         date = tx.get("date", "Дата не указана")
+        if date and isinstance(date, str):
+            # Оставляем только дату (до T или пробела)
+            date = date.split("T")[0].split(" ")[0]
+
+        # Описание
         desc = tx.get("description", "Без описания")
+
+        # Сумма
         amount = tx.get("amount", 0)
+        if isinstance(amount, str):
+            try:
+                amount = float(amount.replace(",", "."))
+            except:
+                amount = 0
+
+        # Валюта
         currency = tx.get("currency", "")
+        if not currency:
+            currency = tx.get("currency_name", "")
+        if not currency:
+            currency = tx.get("currency_code", "")
+
+        # Маскировка счетов
+        from_account = tx.get("from", "")
+        to_account = tx.get("to", "")
+
+        if from_account:
+            from_account = mask_card_number(from_account)
+        if to_account:
+            to_account = mask_card_number(to_account)
+
+        # Вывод
         print(f"{date} {desc}")
+        if from_account and to_account:
+            print(f"С {from_account} -> На {to_account}")
+        elif from_account:
+            print(f"С {from_account}")
+        elif to_account:
+            print(f"На {to_account}")
         print(f"Сумма: {amount} {currency}")
         print("-" * 60)
 
