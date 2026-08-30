@@ -4,7 +4,7 @@
 транзакциями и другие утилиты.
 """
 
-from typing import Any, Dict, List  # Убрал import json
+from typing import Any, Dict, List
 
 from src.decorators.log_decorator import log
 from src.processing import filter_by_state, sort_by_date  # noqa: F401
@@ -16,12 +16,12 @@ from src.transactions.file_reader import read_csv_transactions, read_json_transa
 
 
 @log()
-def test_function():
+def test_function() -> None:
     """Тестовая функция для проверки декоратора."""
     print("Тестовая функция")
 
 
-def run_text_reverser():  # ← ✅ Теперь 2 пустые строки!
+def run_text_reverser() -> None:
     """Запускает функционал реверса текста."""
     text = input("Введите любой текст для реверса: ")
     print(reverse_text(text))
@@ -59,7 +59,7 @@ def load_transactions_from_xlsx(filepath: str) -> List[Dict[str, Any]]:
     try:
         from openpyxl import load_workbook
 
-        transactions = []
+        transactions: List[Dict[str, Any]] = []
         wb = load_workbook(filename=filepath, data_only=True)
         ws = wb.active
 
@@ -82,7 +82,7 @@ def load_transactions_from_xlsx(filepath: str) -> List[Dict[str, Any]]:
     except ImportError:
         print("Библиотека openpyxl не установлена. Установите: pip install openpyxl")
         return []
-    except Exception as e:  # Исправлено: конкретный тип исключения
+    except Exception as e:
         print(f"Ошибка загрузки XLSX: {e}")
         return []
 
@@ -225,7 +225,7 @@ def print_transactions(transactions: List[Dict[str, Any]]) -> None:
         print("-" * 60)
 
 
-def run_bank_processor():
+def run_bank_processor() -> None:
     """
     Запускает основной функционал программы для работы с банковскими транзакциями.
     """
@@ -336,7 +336,7 @@ def run_bank_processor():
     print_transactions(transactions)
 
 
-def main():
+def main() -> None:
     """
     Основная функция программы.
     Предлагает пользователю выбрать режим работы.
