@@ -112,7 +112,7 @@ def get_user_status() -> str:
 
 
 def filter_ruble_transactions(
-    transactions: List[Dict[str, Any]]
+    transactions: List[Dict[str, Any]],
 ) -> List[Dict[str, Any]]:
     """Фильтрует только рублевые транзакции"""
     result: List[Dict[str, Any]] = []
