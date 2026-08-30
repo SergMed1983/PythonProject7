@@ -148,3 +148,8 @@ report.html
 # Your project specific
 src/my_project.egg-info/
 *.egg-info/
+# Игнорируем данные (кириллица)
+данные/*.json
+данные/*.csv
+данные/*.xlsx
+!данные/__init__.py
