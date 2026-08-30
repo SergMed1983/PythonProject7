@@ -2,9 +2,20 @@ import logging
 import os
 
 
-def setup_logger(name: str, log_file: str, level=logging.DEBUG):
-    """Настройка логгера с записью в файл"""
+def setup_logger(
+    name: str, log_file: str, level: int = logging.DEBUG
+) -> logging.Logger:
+    """
+    Настройка логгера с записью в файл.
 
+    Args:
+        name: Имя логгера
+        log_file: Имя файла для логов
+        level: Уровень логирования (по умолчанию DEBUG)
+
+    Returns:
+        Настроенный логгер
+    """
     # Создаем папку logs, если её нет
     log_dir = "logs"
     if not os.path.exists(log_dir):

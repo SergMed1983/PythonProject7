@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, List
+from typing import Any, Dict, List
 
 
 def mask_account_card(account_info: str) -> str:
@@ -45,15 +45,19 @@ def get_date(date_string: str) -> str:
         return date_string
 
 
-def filter_by_state(transactions: List[Dict], state: str = "EXECUTED") -> List[Dict]:
+def filter_by_state(
+    transactions: List[Dict[str, Any]], state: str = "EXECUTED"
+) -> List[Dict[str, Any]]:
     """Фильтрует транзакции по состоянию"""
     return [tx for tx in transactions if tx.get("state", "").upper() == state.upper()]
 
 
-def sort_by_date(transactions: List[Dict], reverse: bool = True) -> List[Dict]:
+def sort_by_date(
+    transactions: List[Dict[str, Any]], reverse: bool = True
+) -> List[Dict[str, Any]]:
     """Сортирует транзакции по дате"""
 
-    def get_date_key(tx):
+    def get_date_key(tx: Dict[str, Any]) -> str:
         date = tx.get("date", "")
         return date[:10] if date else ""
 
