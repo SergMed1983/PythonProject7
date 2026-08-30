@@ -62,10 +62,10 @@ data/*.xlsx
 !data/example.xlsx
 
 # User data (keep structure, ignore content)
-данные/*.json
-данные/*.csv
-данные/*.xlsx
-!данные/__init__.py
+РґР°РЅРЅС‹Рµ/*.json
+РґР°РЅРЅС‹Рµ/*.csv
+РґР°РЅРЅС‹Рµ/*.xlsx
+!РґР°РЅРЅС‹Рµ/__init__.py
 
 # OS generated files
 Thumbs.db
@@ -148,8 +148,8 @@ report.html
 # Your project specific
 src/my_project.egg-info/
 *.egg-info/
-# ���������� ������ (���������)
-������/*.json
-������/*.csv
-������/*.xlsx
-!������/__init__.py
+# Игнорируем данные (кириллица)
+данные/*.json
+данные/*.csv
+данные/*.xlsx
+!данные/__init__.py

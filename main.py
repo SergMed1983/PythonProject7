@@ -1,6 +1,6 @@
 ﻿import json
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 from src.processing import filter_by_state, get_date, mask_account_card, sort_by_date
 from src.search import process_bank_search
@@ -8,7 +8,7 @@ from src.search import process_bank_search
 
 def load_transactions_from_json(directory: str = "data") -> List[Dict[str, Any]]:
     """Загружает транзакции из JSON файлов в директории"""
-    transactions = []
+    transactions: List[Dict[str, Any]] = []
 
     if not os.path.exists(directory):
         return transactions
@@ -29,9 +29,9 @@ def load_transactions_from_json(directory: str = "data") -> List[Dict[str, Any]]
     return transactions
 
 
-def get_transaction_amount(transaction: Dict[str, Any]) -> tuple:
+def get_transaction_amount(transaction: Dict[str, Any]) -> Tuple[float, str]:
     """Извлекает сумму и валюту из транзакции"""
-    amount = 0
+    amount = 0.0
     currency = ""
 
     # Проверяем вложенный словарь operationAmount
@@ -58,7 +58,7 @@ def get_transaction_amount(transaction: Dict[str, Any]) -> tuple:
         try:
             amount = float(amount.replace(",", "."))
         except ValueError:
-            amount = 0
+            amount = 0.0
 
     return amount, currency
 
@@ -111,9 +111,11 @@ def get_user_status() -> str:
             print(f'Статус операции "{status}" недоступен.')
 
 
-def filter_ruble_transactions(transactions: List[Dict]) -> List[Dict]:
+def filter_ruble_transactions(
+    transactions: List[Dict[str, Any]]
+) -> List[Dict[str, Any]]:
     """Фильтрует только рублевые транзакции"""
-    result = []
+    result: List[Dict[str, Any]] = []
     for tx in transactions:
         amount, currency = get_transaction_amount(tx)
         if currency and ("руб" in currency.lower() or "rub" in currency.lower()):
@@ -121,7 +123,7 @@ def filter_ruble_transactions(transactions: List[Dict]) -> List[Dict]:
     return result
 
 
-def main():
+def main() -> None:
     """Главная функция программы"""
     print("Привет! Добро пожаловать в программу работы с банковскими транзакциями.")
 
@@ -134,7 +136,7 @@ def main():
     choice = input().strip()
     if choice == "1":
         print("\nДля обработки выбран JSON-файл.")
-        transactions = load_transactions_from_json("data")
+        transactions: List[Dict[str, Any]] = load_transactions_from_json("data")
     else:
         print("Извините, поддержка CSV и XLSX пока не реализована.")
         print("Загружаем транзакции из JSON...")
