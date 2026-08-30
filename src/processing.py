@@ -1,5 +1,42 @@
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
+
+
+def get_transaction_amount(transaction: Dict[str, Any]) -> Tuple[float, str]:
+    """
+    Извлекает сумму и валюту из транзакции.
+    Поддерживает JSON (operationAmount) и CSV/XLSX (прямые поля).
+    """
+    amount = 0.0
+    currency = ""
+
+    # 1. Для JSON: данные внутри operationAmount
+    if "operationAmount" in transaction:
+        op_amount = transaction["operationAmount"]
+        if isinstance(op_amount, dict):
+            amount = op_amount.get("amount", 0)
+            currency_obj = op_amount.get("currency", {})
+            if isinstance(currency_obj, dict):
+                currency = currency_obj.get("name", "")
+                if not currency:
+                    currency = currency_obj.get("code", "")
+
+    # 2. Если не нашли — проверяем корневые поля (CSV/XLSX)
+    if not amount:
+        amount = transaction.get("amount", 0)
+    if not currency:
+        currency = transaction.get("currency", "")
+        if not currency:
+            currency = transaction.get("currency_name", "")
+
+    # Преобразуем сумму в число
+    if isinstance(amount, str):
+        try:
+            amount = float(amount.replace(",", "."))
+        except ValueError:
+            amount = 0.0
+
+    return amount, currency
 
 
 def mask_account_card(account_info: str) -> str:
@@ -39,7 +76,6 @@ def get_date(date_string: str) -> str:
                 return date_obj.strftime("%d.%m.%Y")
             except ValueError:
                 continue
-        # Если ни один формат не подошел, возвращаем исходную строку
         return date_string
     except Exception:
         return date_string

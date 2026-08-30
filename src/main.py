@@ -7,7 +7,12 @@
 from typing import Any, Dict, List
 
 from src.decorators.log_decorator import log
-from src.processing import filter_by_state, sort_by_date  # noqa: F401
+from src.processing import (
+    filter_by_state,
+    get_transaction_amount,
+    mask_account_card,
+    sort_by_date,
+)
 from src.search import process_bank_search
 from src.text_utils import reverse_text
 from src.transactions.file_reader import read_csv_transactions, read_json_transactions
@@ -31,10 +36,7 @@ def run_text_reverser() -> None:
 
 
 def load_transactions_from_json(filepath: str) -> List[Dict[str, Any]]:
-    """
-    Загружает транзакции из JSON-файла.
-    Использует функцию из processing.py
-    """
+    """Загружает транзакции из JSON-файла."""
     transactions = read_json_transactions(filepath)
     if not transactions:
         print(f"Файл {filepath} не найден или пуст.")
@@ -42,10 +44,7 @@ def load_transactions_from_json(filepath: str) -> List[Dict[str, Any]]:
 
 
 def load_transactions_from_csv(filepath: str) -> List[Dict[str, Any]]:
-    """
-    Загружает транзакции из CSV-файла.
-    Использует функцию из processing.py
-    """
+    """Загружает транзакции из CSV-файла."""
     transactions = read_csv_transactions(filepath)
     if not transactions:
         print(f"Файл {filepath} не найден или пуст.")
@@ -53,9 +52,7 @@ def load_transactions_from_csv(filepath: str) -> List[Dict[str, Any]]:
 
 
 def load_transactions_from_xlsx(filepath: str) -> List[Dict[str, Any]]:
-    """
-    Загружает транзакции из XLSX-файла.
-    """
+    """Загружает транзакции из XLSX-файла."""
     try:
         from openpyxl import load_workbook
 
@@ -63,12 +60,10 @@ def load_transactions_from_xlsx(filepath: str) -> List[Dict[str, Any]]:
         wb = load_workbook(filename=filepath, data_only=True)
         ws = wb.active
 
-        # Получаем заголовки из первой строки
         headers = []
         for cell in ws[1]:
             headers.append(cell.value)
 
-        # Читаем данные
         for row in ws.iter_rows(min_row=2, values_only=True):
             if row and any(cell is not None for cell in row):
                 transaction = {}
@@ -88,9 +83,7 @@ def load_transactions_from_xlsx(filepath: str) -> List[Dict[str, Any]]:
 
 
 def generate_test_transactions() -> List[Dict[str, Any]]:
-    """
-    Генерирует тестовый набор транзакций для демонстрации.
-    """
+    """Генерирует тестовый набор транзакций для демонстрации."""
     return [
         {
             "id": 1,
@@ -138,38 +131,12 @@ def generate_test_transactions() -> List[Dict[str, Any]]:
 def filter_ruble_transactions(
     transactions: List[Dict[str, Any]],
 ) -> List[Dict[str, Any]]:
-    """
-    Оставляет только рублевые транзакции.
-    """
+    """Оставляет только рублевые транзакции."""
     return [tx for tx in transactions if tx.get("currency", "").lower() == "руб."]
 
 
-def mask_card_number(card_number: str) -> str:
-    """
-    Маскирует номер карты или счета.
-    Для карты: 1234 5678 9012 3456 -> 1234 56** **** 3456
-    Для счета: 12345678901234567890 -> **7890
-    """
-    if not card_number or not isinstance(card_number, str):
-        return card_number
-
-    # Убираем пробелы
-    clean = card_number.replace(" ", "")
-
-    if len(clean) == 16:
-        # Карта: первые 6 цифр, 4 звезды, последние 4 цифры
-        return f"{clean[:4]} {clean[4:6]}** **** {clean[12:]}"
-    elif len(clean) > 16:
-        # Счет: показываем только последние 4 цифры
-        return f"**{clean[-4:]}"
-    else:
-        return card_number
-
-
 def print_transactions(transactions: List[Dict[str, Any]]) -> None:
-    """
-    Красиво выводит список транзакций с маскировкой.
-    """
+    """Красиво выводит список транзакций с маскировкой."""
     if not transactions:
         print(
             "\nНе найдено ни одной транзакции, подходящей под ваши условия фильтрации"
@@ -180,45 +147,31 @@ def print_transactions(transactions: List[Dict[str, Any]]) -> None:
     print("-" * 60)
 
     for tx in transactions:
-        # Форматирование даты (убираем время)
+        # Форматирование даты
         date = tx.get("date", "Дата не указана")
         if date and isinstance(date, str):
-            # Оставляем только дату (до T или пробела)
             date = date.split("T")[0].split(" ")[0]
 
-        # Описание
-        desc = tx.get("description", "Без описания")
+        description = tx.get("description", "Без описания")
 
-        # Сумма
-        amount = tx.get("amount", 0)
-        if isinstance(amount, str):
-            try:
-                amount = float(amount.replace(",", "."))
-            except ValueError:
-                amount = 0
+        # ✅ ИСПРАВЛЕНО: получаем сумму и валюту через get_transaction_amount
+        amount, currency = get_transaction_amount(tx)
 
-        # Валюта
-        currency = tx.get("currency", "")
-        if not currency:
-            currency = tx.get("currency_name", "")
-        if not currency:
-            currency = tx.get("currency_code", "")
-
-        # Маскировка счетов
+        # ✅ ИСПРАВЛЕНО: используем mask_account_card из processing
         from_account = tx.get("from", "")
         to_account = tx.get("to", "")
 
         if from_account:
-            from_account = mask_card_number(from_account)
+            from_account = mask_account_card(from_account)
         if to_account:
-            to_account = mask_card_number(to_account)
+            to_account = mask_account_card(to_account)
 
         # Вывод
-        print(f"{date} {desc}")
+        print(f"{date} {description}")
         if from_account and to_account:
-            print(f"С {from_account} -> На {to_account}")
+            print(f"{from_account} -> {to_account}")
         elif from_account:
-            print(f"С {from_account}")
+            print(f"{from_account}")
         elif to_account:
             print(f"На {to_account}")
         print(f"Сумма: {amount} {currency}")
@@ -226,9 +179,7 @@ def print_transactions(transactions: List[Dict[str, Any]]) -> None:
 
 
 def run_bank_processor() -> None:
-    """
-    Запускает основной функционал программы для работы с банковскими транзакциями.
-    """
+    """Запускает основной функционал программы для работы с банковскими транзакциями."""
     print("Привет! Добро пожаловать в программу работы с банковскими транзакциями.")
     print("Выберите необходимый пункт меню:")
     print("1. Получить информацию о транзакциях из JSON-файла")
@@ -331,16 +282,12 @@ def run_bank_processor() -> None:
         if search_word:
             transactions = process_bank_search(transactions, search_word)
 
-    # Вывод результата
     print("\nРаспечатываю итоговый список транзакций...")
     print_transactions(transactions)
 
 
 def main() -> None:
-    """
-    Основная функция программы.
-    Предлагает пользователю выбрать режим работы.
-    """
+    """Основная функция программы."""
     print("Добро пожаловать в программу!")
     print("Выберите режим работы:")
     print("1. Работа с банковскими транзакциями")
