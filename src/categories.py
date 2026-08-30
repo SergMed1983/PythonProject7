@@ -1,8 +1,10 @@
 from collections import Counter
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 
-def process_bank_operations(data: List[Dict[str, Any]], categories: List[str]) -> Dict[str, int]:
+def process_bank_operations(
+    data: List[Dict[str, Any]], categories: List[str]
+) -> Dict[str, int]:
     """
     Подсчитывает количество операций по категориям.
 
@@ -16,8 +18,12 @@ def process_bank_operations(data: List[Dict[str, Any]], categories: List[str]) -
     if not data or not categories:
         return {}
 
-    # Собираем все описания транзакций
-    descriptions = [tx.get('description', '') for tx in data]
+    # Собираем все описания транзакций, пропуская None
+    descriptions = []
+    for tx in data:
+        if tx and isinstance(tx, dict):  # Проверяем, что tx не None и является словарем
+            descriptions.append(tx.get("description", ""))
+        # Если tx is None или не словарь - пропускаем
 
     # Используем Counter для подсчета
     counter = Counter(descriptions)

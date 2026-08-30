@@ -1,15 +1,9 @@
+﻿import json
 import os
-import json
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
-from src.processing import (
-    mask_account_card,
-    get_date,
-    filter_by_state,
-    sort_by_date
-)
+from src.processing import filter_by_state, get_date, mask_account_card, sort_by_date
 from src.search import process_bank_search
-from src.categories import process_bank_operations
 
 
 def load_transactions_from_json(directory: str = "data") -> List[Dict[str, Any]]:
@@ -20,15 +14,15 @@ def load_transactions_from_json(directory: str = "data") -> List[Dict[str, Any]]
         return transactions
 
     for filename in os.listdir(directory):
-        if filename.endswith('.json'):
+        if filename.endswith(".json"):
             filepath = os.path.join(directory, filename)
             try:
-                with open(filepath, 'r', encoding='utf-8') as file:
+                with open(filepath, "r", encoding="utf-8") as file:
                     data = json.load(file)
                     if isinstance(data, list):
                         transactions.extend(data)
-                    elif isinstance(data, dict) and 'transactions' in data:
-                        transactions.extend(data['transactions'])
+                    elif isinstance(data, dict) and "transactions" in data:
+                        transactions.extend(data["transactions"])
             except (json.JSONDecodeError, FileNotFoundError) as e:
                 print(f"Ошибка при загрузке {filename}: {e}")
 
@@ -41,28 +35,28 @@ def get_transaction_amount(transaction: Dict[str, Any]) -> tuple:
     currency = ""
 
     # Проверяем вложенный словарь operationAmount
-    if 'operationAmount' in transaction:
-        op_amount = transaction['operationAmount']
+    if "operationAmount" in transaction:
+        op_amount = transaction["operationAmount"]
         if isinstance(op_amount, dict):
-            amount = op_amount.get('amount', 0)
-            currency_obj = op_amount.get('currency', {})
+            amount = op_amount.get("amount", 0)
+            currency_obj = op_amount.get("currency", {})
             if isinstance(currency_obj, dict):
-                currency = currency_obj.get('name', '')
+                currency = currency_obj.get("name", "")
                 if not currency:
-                    currency = currency_obj.get('code', '')
+                    currency = currency_obj.get("code", "")
 
     # Если не нашли, проверяем корневые поля
     if not amount:
-        amount = transaction.get('amount', 0)
+        amount = transaction.get("amount", 0)
     if not currency:
-        currency = transaction.get('currency', '')
+        currency = transaction.get("currency", "")
         if not currency:
-            currency = transaction.get('currency_name', '')
+            currency = transaction.get("currency_name", "")
 
     # Преобразуем сумму в число
     if isinstance(amount, str):
         try:
-            amount = float(amount.replace(',', '.'))
+            amount = float(amount.replace(",", "."))
         except ValueError:
             amount = 0
 
@@ -71,12 +65,12 @@ def get_transaction_amount(transaction: Dict[str, Any]) -> tuple:
 
 def format_transaction(transaction: Dict[str, Any]) -> str:
     """Форматирует транзакцию для вывода"""
-    date = transaction.get('date', '')
-    description = transaction.get('description', 'Без описания')
+    date = transaction.get("date", "")
+    description = transaction.get("description", "Без описания")
 
     amount, currency = get_transaction_amount(transaction)
-    from_account = transaction.get('from', '')
-    to_account = transaction.get('to', '')
+    from_account = transaction.get("from", "")
+    to_account = transaction.get("to", "")
 
     masked_from = mask_account_card(from_account)
     masked_to = mask_account_card(to_account)
@@ -101,7 +95,7 @@ def get_user_choice(prompt: str, options: List[str]) -> str:
 
 def get_user_status() -> str:
     """Запрашивает у пользователя статус транзакций"""
-    valid_statuses = ['EXECUTED', 'CANCELED', 'PENDING']
+    valid_statuses = ["EXECUTED", "CANCELED", "PENDING"]
 
     while True:
         print("\nВведите статус, по которому необходимо выполнить фильтрацию.")
@@ -122,7 +116,7 @@ def filter_ruble_transactions(transactions: List[Dict]) -> List[Dict]:
     result = []
     for tx in transactions:
         amount, currency = get_transaction_amount(tx)
-        if currency and ('руб' in currency.lower() or 'rub' in currency.lower()):
+        if currency and ("руб" in currency.lower() or "rub" in currency.lower()):
             result.append(tx)
     return result
 
@@ -138,7 +132,7 @@ def main():
     print("3. Получить информацию о транзакциях из XLSX-файла")
 
     choice = input().strip()
-    if choice == '1':
+    if choice == "1":
         print("\nДля обработки выбран JSON-файл.")
         transactions = load_transactions_from_json("data")
     else:
@@ -194,7 +188,9 @@ def main():
         print(f"Отфильтровано по слову '{search_word}'.")
 
         if not filtered_by_status:
-            print("Не найдено ни одной транзакции, подходящей под ваши условия фильтрации")
+            print(
+                "Не найдено ни одной транзакции, подходящей под ваши условия фильтрации"
+            )
             return
 
     # 6. Вывод результатов

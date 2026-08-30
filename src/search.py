@@ -1,8 +1,10 @@
 import re
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 
-def process_bank_search(data: List[Dict[str, Any]], search: str) -> List[Dict[str, Any]]:
+def process_bank_search(
+    data: List[Dict[str, Any]], search: str
+) -> List[Dict[str, Any]]:
     """
     Ищет транзакции по описанию с использованием регулярных выражений.
 
@@ -21,7 +23,7 @@ def process_bank_search(data: List[Dict[str, Any]], search: str) -> List[Dict[st
 
     result = []
     for transaction in data:
-        description = transaction.get('description', '')
+        description = transaction.get("description", "")
         if pattern.search(description):
             result.append(transaction)
 

@@ -7,16 +7,13 @@
 from typing import Any, Dict, List  # Убрал import json
 
 from src.decorators.log_decorator import log
-from src.processing import (
-    filter_by_state,
-    read_csv_transactions,
-    read_json_transactions,
-    search_transactions_by_description,
-    sort_by_date,
-)
+from src.processing import filter_by_state, sort_by_date  # noqa: F401
+from src.search import process_bank_search
 from src.text_utils import reverse_text
+from src.transactions.file_reader import read_csv_transactions, read_json_transactions
 
 # ============ СУЩЕСТВУЮЩИЙ ФУНКЦИОНАЛ ============
+
 
 @log()
 def test_function():
@@ -28,6 +25,7 @@ def run_text_reverser():  # ← ✅ Теперь 2 пустые строки!
     """Запускает функционал реверса текста."""
     text = input("Введите любой текст для реверса: ")
     print(reverse_text(text))
+
 
 # ============ НОВЫЙ ФУНКЦИОНАЛ ДЛЯ ДЗ 13.2 ============
 
@@ -60,6 +58,7 @@ def load_transactions_from_xlsx(filepath: str) -> List[Dict[str, Any]]:
     """
     try:
         from openpyxl import load_workbook
+
         transactions = []
         wb = load_workbook(filename=filepath, data_only=True)
         ws = wb.active
@@ -137,7 +136,7 @@ def generate_test_transactions() -> List[Dict[str, Any]]:
 
 
 def filter_ruble_transactions(
-    transactions: List[Dict[str, Any]]
+    transactions: List[Dict[str, Any]],
 ) -> List[Dict[str, Any]]:
     """
     Оставляет только рублевые транзакции.
@@ -172,7 +171,9 @@ def print_transactions(transactions: List[Dict[str, Any]]) -> None:
     Красиво выводит список транзакций с маскировкой.
     """
     if not transactions:
-        print("\nНе найдено ни одной транзакции, подходящей под ваши условия фильтрации")
+        print(
+            "\nНе найдено ни одной транзакции, подходящей под ваши условия фильтрации"
+        )
         return
 
     print(f"\nВсего банковских операций в выборке: {len(transactions)}")
@@ -239,7 +240,9 @@ def run_bank_processor():
 
     if choice == "1":
         print("Для обработки выбран JSON-файл.")
-        filepath = input("Введите путь к JSON-файлу (или нажмите Enter для тестовых данных): ").strip()
+        filepath = input(
+            "Введите путь к JSON-файлу (или нажмите Enter для тестовых данных): "
+        ).strip()
         if filepath:
             transactions = load_transactions_from_json(filepath)
         if not transactions:
@@ -247,7 +250,9 @@ def run_bank_processor():
             transactions = generate_test_transactions()
     elif choice == "2":
         print("Для обработки выбран CSV-файл.")
-        filepath = input("Введите путь к CSV-файлу (или нажмите Enter для тестовых данных): ").strip()
+        filepath = input(
+            "Введите путь к CSV-файлу (или нажмите Enter для тестовых данных): "
+        ).strip()
         if filepath:
             transactions = load_transactions_from_csv(filepath)
         if not transactions:
@@ -255,7 +260,9 @@ def run_bank_processor():
             transactions = generate_test_transactions()
     elif choice == "3":
         print("Для обработки выбран XLSX-файл.")
-        filepath = input("Введите путь к XLSX-файлу (или нажмите Enter для тестовых данных): ").strip()
+        filepath = input(
+            "Введите путь к XLSX-файлу (или нажмите Enter для тестовых данных): "
+        ).strip()
         if filepath:
             transactions = load_transactions_from_xlsx(filepath)
         if not transactions:
@@ -272,11 +279,15 @@ def run_bank_processor():
     # Фильтрация по статусу
     valid_statuses = ["EXECUTED", "CANCELED", "PENDING"]
     while True:
-        status_input = input(
-            "\nВведите статус, по которому необходимо выполнить фильтрацию.\n"
-            "Доступные для фильтровки статусы: EXECUTED, CANCELED, PENDING\n"
-            "Ваш статус: "
-        ).strip().upper()
+        status_input = (
+            input(
+                "\nВведите статус, по которому необходимо выполнить фильтрацию.\n"
+                "Доступные для фильтровки статусы: EXECUTED, CANCELED, PENDING\n"
+                "Ваш статус: "
+            )
+            .strip()
+            .upper()
+        )
 
         if status_input in valid_statuses:
             transactions = filter_by_state(transactions, status_input)
@@ -297,7 +308,9 @@ def run_bank_processor():
         transactions = sort_by_date(transactions, ascending)
 
     # Фильтр по рублям
-    ruble_choice = input("\nВыводить только рублевые транзакции? Да/Нет: ").strip().lower()
+    ruble_choice = (
+        input("\nВыводить только рублевые транзакции? Да/Нет: ").strip().lower()
+    )
     if ruble_choice in ["да", "yes", "y", "д"]:
         transactions = filter_ruble_transactions(transactions)
 
@@ -306,13 +319,17 @@ def run_bank_processor():
         return
 
     # Поиск по описанию
-    search_choice = input(
-        "\nОтфильтровать список транзакций по определенному слову в описании? Да/Нет: "
-    ).strip().lower()
+    search_choice = (
+        input(
+            "\nОтфильтровать список транзакций по определенному слову в описании? Да/Нет: "
+        )
+        .strip()
+        .lower()
+    )
     if search_choice in ["да", "yes", "y", "д"]:
         search_word = input("Введите слово для поиска: ").strip()
         if search_word:
-            transactions = search_transactions_by_description(transactions, search_word)
+            transactions = process_bank_search(transactions, search_word)
 
     # Вывод результата
     print("\nРаспечатываю итоговый список транзакций...")
