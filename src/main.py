@@ -1,102 +1,120 @@
-п»ї"""
-Р“Р»Р°РІРЅС‹Р№ РјРѕРґСѓР»СЊ РїСЂРёР»РѕР¶РµРЅРёСЏ.
-РЎРѕРґРµСЂР¶РёС‚ С„СѓРЅРєС†РёРѕРЅР°Р» РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ Р±Р°РЅРєРѕРІСЃРєРёРјРё
-С‚СЂР°РЅР·Р°РєС†РёСЏРјРё Рё РґСЂСѓРіРёРµ СѓС‚РёР»РёС‚С‹.
+"""
+Главный модуль приложения.
+Содержит функционал для работы с банковскими
+транзакциями и другие утилиты.
 """
 
+import os
 from typing import Any, Dict, List
 
-from src.decorators.log_decorator import log
-from src.processing import (
-    filter_by_state,
-    get_transaction_amount,
-    mask_account_card,
-    sort_by_date,
-)
-from src.search import process_bank_search
-from src.text_utils import reverse_text
-from src.transactions.file_reader import read_csv_transactions, read_json_transactions
+import pandas as pd
 
-# ============ РЎРЈР©Р•РЎРўР’РЈР®Р©РР™ Р¤РЈРќРљР¦РРћРќРђР› ============
+from src.processing import filter_by_state, sort_by_date
 
 
-@log()
 def test_function() -> None:
-    """РўРµСЃС‚РѕРІР°СЏ С„СѓРЅРєС†РёСЏ РґР»СЏ РїСЂРѕРІРµСЂРєРё РґРµРєРѕСЂР°С‚РѕСЂР°."""
-    print("РўРµСЃС‚РѕРІР°СЏ С„СѓРЅРєС†РёСЏ")
+    """Тестовая функция для проверки декоратора."""
+    print("Тестовая функция")
 
 
 def run_text_reverser() -> None:
-    """Р—Р°РїСѓСЃРєР°РµС‚ С„СѓРЅРєС†РёРѕРЅР°Р» СЂРµРІРµСЂСЃР° С‚РµРєСЃС‚Р°."""
-    text = input("Р’РІРµРґРёС‚Рµ Р»СЋР±РѕР№ С‚РµРєСЃС‚ РґР»СЏ СЂРµРІРµСЂСЃР°: ")
+    """Запускает функционал реверса текста."""
+    from src.text_utils import reverse_text
+
+    text = input("Введите любой текст для реверса: ")
     print(reverse_text(text))
 
 
-# ============ РќРћР’Р«Р™ Р¤РЈРќРљР¦РРћРќРђР› Р”Р›РЇ Р”Р— 13.2 ============
-
-
 def load_transactions_from_json(filepath: str) -> List[Dict[str, Any]]:
-    """Р—Р°РіСЂСѓР¶Р°РµС‚ С‚СЂР°РЅР·Р°РєС†РёРё РёР· JSON-С„Р°Р№Р»Р°."""
+    """Загружает транзакции из JSON-файла."""
+    from src.transactions.file_reader import read_json_transactions
+
     transactions = read_json_transactions(filepath)
     if not transactions:
-        print(f"Р¤Р°Р№Р» {filepath} РЅРµ РЅР°Р№РґРµРЅ РёР»Рё РїСѓСЃС‚.")
+        print(f"Файл {filepath} не найден или пуст.")
     return transactions
 
 
 def load_transactions_from_csv(filepath: str) -> List[Dict[str, Any]]:
-    """Р—Р°РіСЂСѓР¶Р°РµС‚ С‚СЂР°РЅР·Р°РєС†РёРё РёР· CSV-С„Р°Р№Р»Р°."""
+    """Загружает транзакции из CSV-файла."""
+    from src.transactions.file_reader import read_csv_transactions
+
     transactions = read_csv_transactions(filepath)
     if not transactions:
-        print(f"Р¤Р°Р№Р» {filepath} РЅРµ РЅР°Р№РґРµРЅ РёР»Рё РїСѓСЃС‚.")
+        print(f"Файл {filepath} не найден или пуст.")
     return transactions
 
 
 def load_transactions_from_xlsx(filepath: str) -> List[Dict[str, Any]]:
-    """Р—Р°РіСЂСѓР¶Р°РµС‚ С‚СЂР°РЅР·Р°РєС†РёРё РёР· XLSX-С„Р°Р№Р»Р°."""
+    """
+    Загружает транзакции из XLSX-файла с помощью pandas.
+    Корректно обрабатывает даты.
+    """
+    transactions: List[Dict[str, Any]] = []
+
+    if not os.path.exists(filepath):
+        print(f"Файл {filepath} не найден")
+        return []
+
     try:
-        from openpyxl import load_workbook
+        df = pd.read_excel(filepath)
 
-        transactions: List[Dict[str, Any]] = []
-        wb = load_workbook(filename=filepath, data_only=True)
-        ws = wb.active
+        print(f"Найдено колонок: {list(df.columns)}")
+        print(f"Найдено строк: {len(df)}")
 
-        headers = []
-        for cell in ws[1]:
-            headers.append(cell.value)
+        for col in df.columns:
+            if pd.api.types.is_datetime64_any_dtype(df[col]):
+                df[col] = df[col].dt.strftime("%Y-%m-%d")
+            elif df[col].dtype == "object":
+                try:
+                    sample = (
+                        df[col].dropna().iloc[0]
+                        if len(df[col].dropna()) > 0
+                        else None
+                    )
+                    if sample and isinstance(sample, str):
+                        df[col] = pd.to_datetime(df[col], errors="coerce")
+                        if pd.api.types.is_datetime64_any_dtype(df[col]):
+                            df[col] = df[col].dt.strftime("%Y-%m-%d")
+                except Exception:
+                    pass
 
-        for row in ws.iter_rows(min_row=2, values_only=True):
-            if row and any(cell is not None for cell in row):
-                transaction = {}
-                for i, header in enumerate(headers):
-                    if i < len(row):
-                        transaction[header] = row[i]
-                transactions.append(transaction)
+        df = df.where(pd.notnull(df), None)
+        transactions = df.to_dict("records")
 
-        wb.close()
-        return transactions
+        print(f"Успешно прочитано {len(transactions)} транзакций из XLSX")
+
     except ImportError:
-        print("Р‘РёР±Р»РёРѕС‚РµРєР° openpyxl РЅРµ СѓСЃС‚Р°РЅРѕРІР»РµРЅР°. РЈСЃС‚Р°РЅРѕРІРёС‚Рµ: pip install openpyxl")
+        print(
+            "Библиотека pandas не установлена. "
+            "Установите: pip install pandas openpyxl"
+        )
         return []
     except Exception as e:
-        print(f"РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё XLSX: {e}")
+        print(f"Ошибка загрузки XLSX: {e}")
+        import traceback
+
+        traceback.print_exc()
         return []
+
+    return transactions
 
 
 def generate_test_transactions() -> List[Dict[str, Any]]:
-    """Р“РµРЅРµСЂРёСЂСѓРµС‚ С‚РµСЃС‚РѕРІС‹Р№ РЅР°Р±РѕСЂ С‚СЂР°РЅР·Р°РєС†РёР№ РґР»СЏ РґРµРјРѕРЅСЃС‚СЂР°С†РёРё."""
+    """Генерирует тестовый набор транзакций для демонстрации."""
     return [
         {
             "id": 1,
             "date": "2019-12-08",
-            "description": "РћС‚РєСЂС‹С‚РёРµ РІРєР»Р°РґР°",
+            "description": "Открытие вклада",
             "amount": 40542,
-            "currency": "СЂСѓР±.",
+            "currency": "руб.",
             "state": "EXECUTED",
         },
         {
             "id": 2,
             "date": "2019-11-12",
-            "description": "РџРµСЂРµРІРѕРґ СЃ РєР°СЂС‚С‹ РЅР° РєР°СЂС‚Сѓ",
+            "description": "Перевод с карты на карту",
             "amount": 130,
             "currency": "USD",
             "state": "EXECUTED",
@@ -104,15 +122,15 @@ def generate_test_transactions() -> List[Dict[str, Any]]:
         {
             "id": 3,
             "date": "2018-07-18",
-            "description": "РџРµСЂРµРІРѕРґ РѕСЂРіР°РЅРёР·Р°С†РёРё",
+            "description": "Перевод организации",
             "amount": 8390,
-            "currency": "СЂСѓР±.",
+            "currency": "руб.",
             "state": "CANCELED",
         },
         {
             "id": 4,
             "date": "2018-06-03",
-            "description": "РџРµСЂРµРІРѕРґ СЃРѕ СЃС‡РµС‚Р° РЅР° СЃС‡РµС‚",
+            "description": "Перевод со счета на счет",
             "amount": 8200,
             "currency": "EUR",
             "state": "PENDING",
@@ -120,9 +138,9 @@ def generate_test_transactions() -> List[Dict[str, Any]]:
         {
             "id": 5,
             "date": "2020-01-01",
-            "description": "РћРїР»Р°С‚Р° РёРЅС‚РµСЂРЅРµС‚Р°",
+            "description": "Оплата интернета",
             "amount": 500,
-            "currency": "СЂСѓР±.",
+            "currency": "руб.",
             "state": "EXECUTED",
         },
     ]
@@ -131,33 +149,31 @@ def generate_test_transactions() -> List[Dict[str, Any]]:
 def filter_ruble_transactions(
     transactions: List[Dict[str, Any]],
 ) -> List[Dict[str, Any]]:
-    """РћСЃС‚Р°РІР»СЏРµС‚ С‚РѕР»СЊРєРѕ СЂСѓР±Р»РµРІС‹Рµ С‚СЂР°РЅР·Р°РєС†РёРё."""
-    return [tx for tx in transactions if tx.get("currency", "").lower() == "СЂСѓР±."]
+    """Оставляет только рублевые транзакции."""
+    return [tx for tx in transactions if tx.get("currency", "").lower() == "руб."]
 
 
 def print_transactions(transactions: List[Dict[str, Any]]) -> None:
-    """РљСЂР°СЃРёРІРѕ РІС‹РІРѕРґРёС‚ СЃРїРёСЃРѕРє С‚СЂР°РЅР·Р°РєС†РёР№ СЃ РјР°СЃРєРёСЂРѕРІРєРѕР№."""
+    """Красиво выводит список транзакций с маскировкой."""
+    from src.processing import get_transaction_amount, mask_account_card
+
     if not transactions:
         print(
-            "\nРќРµ РЅР°Р№РґРµРЅРѕ РЅРё РѕРґРЅРѕР№ С‚СЂР°РЅР·Р°РєС†РёРё, РїРѕРґС…РѕРґСЏС‰РµР№ РїРѕРґ РІР°С€Рё СѓСЃР»РѕРІРёСЏ С„РёР»СЊС‚СЂР°С†РёРё"
+            "\nНе найдено ни одной транзакции, подходящей под ваши условия фильтрации"
         )
         return
 
-    print(f"\nР’СЃРµРіРѕ Р±Р°РЅРєРѕРІСЃРєРёС… РѕРїРµСЂР°С†РёР№ РІ РІС‹Р±РѕСЂРєРµ: {len(transactions)}")
+    print(f"\nВсего банковских операций в выборке: {len(transactions)}")
     print("-" * 60)
 
     for tx in transactions:
-        # Р¤РѕСЂРјР°С‚РёСЂРѕРІР°РЅРёРµ РґР°С‚С‹
-        date = tx.get("date", "Р”Р°С‚Р° РЅРµ СѓРєР°Р·Р°РЅР°")
+        date = tx.get("date", "Дата не указана")
         if date and isinstance(date, str):
             date = date.split("T")[0].split(" ")[0]
 
-        description = tx.get("description", "Р‘РµР· РѕРїРёСЃР°РЅРёСЏ")
-
-        # вњ… РРЎРџР РђР’Р›Р•РќРћ: РїРѕР»СѓС‡Р°РµРј СЃСѓРјРјСѓ Рё РІР°Р»СЋС‚Сѓ С‡РµСЂРµР· get_transaction_amount
+        description = tx.get("description", "Без описания")
         amount, currency = get_transaction_amount(tx)
 
-        # вњ… РРЎРџР РђР’Р›Р•РќРћ: РёСЃРїРѕР»СЊР·СѓРµРј mask_account_card РёР· processing
         from_account = tx.get("from", "")
         to_account = tx.get("to", "")
 
@@ -166,134 +182,129 @@ def print_transactions(transactions: List[Dict[str, Any]]) -> None:
         if to_account:
             to_account = mask_account_card(to_account)
 
-        # Р’С‹РІРѕРґ
         print(f"{date} {description}")
         if from_account and to_account:
             print(f"{from_account} -> {to_account}")
         elif from_account:
             print(f"{from_account}")
         elif to_account:
-            print(f"РќР° {to_account}")
-        print(f"РЎСѓРјРјР°: {amount} {currency}")
+            print(f"На {to_account}")
+        print(f"Сумма: {amount} {currency}")
         print("-" * 60)
 
 
 def run_bank_processor() -> None:
-    """Р—Р°РїСѓСЃРєР°РµС‚ РѕСЃРЅРѕРІРЅРѕР№ С„СѓРЅРєС†РёРѕРЅР°Р» РїСЂРѕРіСЂР°РјРјС‹ РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ Р±Р°РЅРєРѕРІСЃРєРёРјРё С‚СЂР°РЅР·Р°РєС†РёСЏРјРё."""
-    print("РџСЂРёРІРµС‚! Р”РѕР±СЂРѕ РїРѕР¶Р°Р»РѕРІР°С‚СЊ РІ РїСЂРѕРіСЂР°РјРјСѓ СЂР°Р±РѕС‚С‹ СЃ Р±Р°РЅРєРѕРІСЃРєРёРјРё С‚СЂР°РЅР·Р°РєС†РёСЏРјРё.")
-    print("Р’С‹Р±РµСЂРёС‚Рµ РЅРµРѕР±С…РѕРґРёРјС‹Р№ РїСѓРЅРєС‚ РјРµРЅСЋ:")
-    print("1. РџРѕР»СѓС‡РёС‚СЊ РёРЅС„РѕСЂРјР°С†РёСЋ Рѕ С‚СЂР°РЅР·Р°РєС†РёСЏС… РёР· JSON-С„Р°Р№Р»Р°")
-    print("2. РџРѕР»СѓС‡РёС‚СЊ РёРЅС„РѕСЂРјР°С†РёСЋ Рѕ С‚СЂР°РЅР·Р°РєС†РёСЏС… РёР· CSV-С„Р°Р№Р»Р°")
-    print("3. РџРѕР»СѓС‡РёС‚СЊ РёРЅС„РѕСЂРјР°С†РёСЋ Рѕ С‚СЂР°РЅР·Р°РєС†РёСЏС… РёР· XLSX-С„Р°Р№Р»Р°")
+    """Запускает основной функционал программы для работы с банковскими транзакциями."""
+    print("Привет! Добро пожаловать в программу работы с банковскими транзакциями.")
+    print("Выберите необходимый пункт меню:")
+    print("1. Получить информацию о транзакциях из JSON-файла")
+    print("2. Получить информацию о транзакциях из CSV-файла")
+    print("3. Получить информацию о транзакциях из XLSX-файла")
 
-    choice = input("\nР’Р°С€ РІС‹Р±РѕСЂ: ").strip()
+    choice = input("\nВаш выбор: ").strip()
     transactions: List[Dict[str, Any]] = []
 
     if choice == "1":
-        print("Р”Р»СЏ РѕР±СЂР°Р±РѕС‚РєРё РІС‹Р±СЂР°РЅ JSON-С„Р°Р№Р».")
+        print("Для обработки выбран JSON-файл.")
         filepath = input(
-            "Р’РІРµРґРёС‚Рµ РїСѓС‚СЊ Рє JSON-С„Р°Р№Р»Сѓ (РёР»Рё РЅР°Р¶РјРёС‚Рµ Enter РґР»СЏ С‚РµСЃС‚РѕРІС‹С… РґР°РЅРЅС‹С…): "
+            "Введите путь к JSON-файлу (или нажмите Enter для тестовых данных): "
         ).strip()
         if filepath:
             transactions = load_transactions_from_json(filepath)
         if not transactions:
-            print("Р¤Р°Р№Р» РЅРµ РЅР°Р№РґРµРЅ РёР»Рё РїСѓСЃС‚. Р—Р°РіСЂСѓР¶Р°СЋ С‚РµСЃС‚РѕРІС‹Рµ РґР°РЅРЅС‹Рµ.")
+            print("Файл не найден или пуст. Загружаю тестовые данные.")
             transactions = generate_test_transactions()
     elif choice == "2":
-        print("Р”Р»СЏ РѕР±СЂР°Р±РѕС‚РєРё РІС‹Р±СЂР°РЅ CSV-С„Р°Р№Р».")
+        print("Для обработки выбран CSV-файл.")
         filepath = input(
-            "Р’РІРµРґРёС‚Рµ РїСѓС‚СЊ Рє CSV-С„Р°Р№Р»Сѓ (РёР»Рё РЅР°Р¶РјРёС‚Рµ Enter РґР»СЏ С‚РµСЃС‚РѕРІС‹С… РґР°РЅРЅС‹С…): "
+            "Введите путь к CSV-файлу (или нажмите Enter для тестовых данных): "
         ).strip()
         if filepath:
             transactions = load_transactions_from_csv(filepath)
         if not transactions:
-            print("Р¤Р°Р№Р» РЅРµ РЅР°Р№РґРµРЅ РёР»Рё РїСѓСЃС‚. Р—Р°РіСЂСѓР¶Р°СЋ С‚РµСЃС‚РѕРІС‹Рµ РґР°РЅРЅС‹Рµ.")
+            print("Файл не найден или пуст. Загружаю тестовые данные.")
             transactions = generate_test_transactions()
     elif choice == "3":
-        print("Р”Р»СЏ РѕР±СЂР°Р±РѕС‚РєРё РІС‹Р±СЂР°РЅ XLSX-С„Р°Р№Р».")
+        print("Для обработки выбран XLSX-файл.")
         filepath = input(
-            "Р’РІРµРґРёС‚Рµ РїСѓС‚СЊ Рє XLSX-С„Р°Р№Р»Сѓ (РёР»Рё РЅР°Р¶РјРёС‚Рµ Enter РґР»СЏ С‚РµСЃС‚РѕРІС‹С… РґР°РЅРЅС‹С…): "
+            "Введите путь к XLSX-файлу (или нажмите Enter для data/transactions.xlsx): "
         ).strip()
-        if filepath:
-            transactions = load_transactions_from_xlsx(filepath)
+        if not filepath:
+            filepath = "data/transactions.xlsx"
+        transactions = load_transactions_from_xlsx(filepath)
         if not transactions:
-            print("Р¤Р°Р№Р» РЅРµ РЅР°Р№РґРµРЅ РёР»Рё РїСѓСЃС‚. Р—Р°РіСЂСѓР¶Р°СЋ С‚РµСЃС‚РѕРІС‹Рµ РґР°РЅРЅС‹Рµ.")
+            print("Файл не найден или пуст. Загружаю тестовые данные.")
             transactions = generate_test_transactions()
     else:
-        print("РќРµРІРµСЂРЅС‹Р№ РІС‹Р±РѕСЂ. Р—Р°РіСЂСѓР¶Р°СЋ С‚РµСЃС‚РѕРІС‹Рµ РґР°РЅРЅС‹Рµ.")
+        print("Неверный выбор. Загружаю тестовые данные.")
         transactions = generate_test_transactions()
 
     if not transactions:
-        print("РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ С‚СЂР°РЅР·Р°РєС†РёРё.")
+        print("Не удалось загрузить транзакции.")
         return
 
-    # Р¤РёР»СЊС‚СЂР°С†РёСЏ РїРѕ СЃС‚Р°С‚СѓСЃСѓ
     valid_statuses = ["EXECUTED", "CANCELED", "PENDING"]
     while True:
-        status_input = (
-            input(
-                "\nР’РІРµРґРёС‚Рµ СЃС‚Р°С‚СѓСЃ, РїРѕ РєРѕС‚РѕСЂРѕРјСѓ РЅРµРѕР±С…РѕРґРёРјРѕ РІС‹РїРѕР»РЅРёС‚СЊ С„РёР»СЊС‚СЂР°С†РёСЋ.\n"
-                "Р”РѕСЃС‚СѓРїРЅС‹Рµ РґР»СЏ С„РёР»СЊС‚СЂРѕРІРєРё СЃС‚Р°С‚СѓСЃС‹: EXECUTED, CANCELED, PENDING\n"
-                "Р’Р°С€ СЃС‚Р°С‚СѓСЃ: "
-            )
-            .strip()
-            .upper()
-        )
-
+        status_input = input(
+            "\nВведите статус, по которому необходимо выполнить фильтрацию.\n"
+            "Доступные для фильтровки статусы: EXECUTED, CANCELED, PENDING\n"
+            "Ваш статус: "
+        ).strip().upper()
         if status_input in valid_statuses:
             transactions = filter_by_state(transactions, status_input)
-            print(f'РћРїРµСЂР°С†РёРё РѕС‚С„РёР»СЊС‚СЂРѕРІР°РЅС‹ РїРѕ СЃС‚Р°С‚СѓСЃСѓ "{status_input}"')
+            print(f'Операции отфильтрованы по статусу "{status_input}"')
             break
         else:
-            print(f'РЎС‚Р°С‚СѓСЃ РѕРїРµСЂР°С†РёРё "{status_input}" РЅРµРґРѕСЃС‚СѓРїРµРЅ.')
+            print(f'Статус операции "{status_input}" недоступен.')
 
     if not transactions:
-        print("РќРµ РЅР°Р№РґРµРЅРѕ РЅРё РѕРґРЅРѕР№ С‚СЂР°РЅР·Р°РєС†РёРё СЃ С‚Р°РєРёРј СЃС‚Р°С‚СѓСЃРѕРј.")
+        print("Не найдено ни одной транзакции с таким статусом.")
         return
 
-    # РЎРѕСЂС‚РёСЂРѕРІРєР° РїРѕ РґР°С‚Рµ
-    sort_choice = input("\nРћС‚СЃРѕСЂС‚РёСЂРѕРІР°С‚СЊ РѕРїРµСЂР°С†РёРё РїРѕ РґР°С‚Рµ? Р”Р°/РќРµС‚: ").strip().lower()
-    if sort_choice in ["РґР°", "yes", "y", "Рґ"]:
-        order = input("РћС‚СЃРѕСЂС‚РёСЂРѕРІР°С‚СЊ РїРѕ РІРѕР·СЂР°СЃС‚Р°РЅРёСЋ РёР»Рё РїРѕ СѓР±С‹РІР°РЅРёСЋ? ").strip().lower()
-        ascending = order in ["РїРѕ РІРѕР·СЂР°СЃС‚Р°РЅРёСЋ", "РІРѕР·СЂР°СЃС‚Р°РЅРёСЋ", "asc", "РІРѕР·СЂР°СЃС‚"]
+    sort_choice = input(
+        "\nОтсортировать операции по дате? Да/Нет: "
+    ).strip().lower()
+    if sort_choice in ["да", "yes", "y", "д"]:
+        order = input(
+            "Отсортировать по возрастанию или по убыванию? "
+        ).strip().lower()
+        ascending = order in ["по возрастанию", "возрастанию", "asc", "возраст"]
         transactions = sort_by_date(transactions, ascending)
 
-    # Р¤РёР»СЊС‚СЂ РїРѕ СЂСѓР±Р»СЏРј
-    ruble_choice = (
-        input("\nР’С‹РІРѕРґРёС‚СЊ С‚РѕР»СЊРєРѕ СЂСѓР±Р»РµРІС‹Рµ С‚СЂР°РЅР·Р°РєС†РёРё? Р”Р°/РќРµС‚: ").strip().lower()
-    )
-    if ruble_choice in ["РґР°", "yes", "y", "Рґ"]:
+    ruble_choice = input(
+        "\nВыводить только рублевые транзакции? Да/Нет: "
+    ).strip().lower()
+    if ruble_choice in ["да", "yes", "y", "д"]:
         transactions = filter_ruble_transactions(transactions)
 
     if not transactions:
-        print("РќРµ РЅР°Р№РґРµРЅРѕ РЅРё РѕРґРЅРѕР№ С‚СЂР°РЅР·Р°РєС†РёРё, РїРѕРґС…РѕРґСЏС‰РµР№ РїРѕРґ РІР°С€Рё СѓСЃР»РѕРІРёСЏ С„РёР»СЊС‚СЂР°С†РёРё")
+        print(
+            "Не найдено ни одной транзакции, "
+            "подходящей под ваши условия фильтрации"
+        )
         return
 
-    # РџРѕРёСЃРє РїРѕ РѕРїРёСЃР°РЅРёСЋ
-    search_choice = (
-        input(
-            "\nРћС‚С„РёР»СЊС‚СЂРѕРІР°С‚СЊ СЃРїРёСЃРѕРє С‚СЂР°РЅР·Р°РєС†РёР№ РїРѕ РѕРїСЂРµРґРµР»РµРЅРЅРѕРјСѓ СЃР»РѕРІСѓ РІ РѕРїРёСЃР°РЅРёРё? Р”Р°/РќРµС‚: "
-        )
-        .strip()
-        .lower()
-    )
-    if search_choice in ["РґР°", "yes", "y", "Рґ"]:
-        search_word = input("Р’РІРµРґРёС‚Рµ СЃР»РѕРІРѕ РґР»СЏ РїРѕРёСЃРєР°: ").strip()
+    search_choice = input(
+        "\nОтфильтровать список транзакций по определенному слову в описании? Да/Нет: "
+    ).strip().lower()
+    if search_choice in ["да", "yes", "y", "д"]:
+        search_word = input("Введите слово для поиска: ").strip()
         if search_word:
+            from src.search import process_bank_search
             transactions = process_bank_search(transactions, search_word)
 
-    print("\nР Р°СЃРїРµС‡Р°С‚С‹РІР°СЋ РёС‚РѕРіРѕРІС‹Р№ СЃРїРёСЃРѕРє С‚СЂР°РЅР·Р°РєС†РёР№...")
+    print("\nРаспечатываю итоговый список транзакций...")
     print_transactions(transactions)
 
 
 def main() -> None:
-    """РћСЃРЅРѕРІРЅР°СЏ С„СѓРЅРєС†РёСЏ РїСЂРѕРіСЂР°РјРјС‹."""
-    print("Р”РѕР±СЂРѕ РїРѕР¶Р°Р»РѕРІР°С‚СЊ РІ РїСЂРѕРіСЂР°РјРјСѓ!")
-    print("Р’С‹Р±РµСЂРёС‚Рµ СЂРµР¶РёРј СЂР°Р±РѕС‚С‹:")
-    print("1. Р Р°Р±РѕС‚Р° СЃ Р±Р°РЅРєРѕРІСЃРєРёРјРё С‚СЂР°РЅР·Р°РєС†РёСЏРјРё")
-    print("2. Р РµРІРµСЂСЃ С‚РµРєСЃС‚Р° (С‚РµСЃС‚РѕРІС‹Р№ СЂРµР¶РёРј)")
+    """Основная функция программы."""
+    print("Добро пожаловать в программу!")
+    print("Выберите режим работы:")
+    print("1. Работа с банковскими транзакциями")
+    print("2. Реверс текста (тестовый режим)")
 
-    mode = input("\nР’Р°С€ РІС‹Р±РѕСЂ: ").strip()
+    mode = input("\nВаш выбор: ").strip()
 
     if mode == "1":
         run_bank_processor()
@@ -301,7 +312,7 @@ def main() -> None:
         test_function()
         run_text_reverser()
     else:
-        print("РќРµРІРµСЂРЅС‹Р№ РІС‹Р±РѕСЂ. Р—Р°РїСѓСЃРєР°СЋ СЂРµР¶РёРј СЂР°Р±РѕС‚С‹ СЃ Р±Р°РЅРєРѕРІСЃРєРёРјРё С‚СЂР°РЅР·Р°РєС†РёСЏРјРё.")
+        print("Неверный выбор. Запускаю режим работы с банковскими транзакциями.")
         run_bank_processor()
 
 
