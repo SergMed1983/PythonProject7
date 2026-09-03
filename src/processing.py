@@ -91,10 +91,18 @@ def filter_by_state(
 def sort_by_date(
     transactions: List[Dict[str, Any]], reverse: bool = True
 ) -> List[Dict[str, Any]]:
-    """Сортирует транзакции по дате"""
+    """Сортирует транзакции по дате."""
 
-    def get_date_key(tx: Dict[str, Any]) -> str:
-        date = tx.get("date", "")
-        return date[:10] if date else ""
+    def get_date_key(tx: Dict[str, Any]) -> datetime:
+        date_str = tx.get("date", "01.01.1970")
+        try:
+            # Парсим дату в формате ДД.ММ.ГГГГ
+            return datetime.strptime(date_str, "%d.%m.%Y")
+        except (ValueError, TypeError):
+            # Если дата в другом формате, пробуем стандартный
+            try:
+                return datetime.strptime(date_str[:10], "%Y-%m-%d")
+            except (ValueError, TypeError):
+                return datetime.strptime("01.01.1970", "%d.%m.%Y")
 
     return sorted(transactions, key=get_date_key, reverse=reverse)

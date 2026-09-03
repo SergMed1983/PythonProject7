@@ -27,7 +27,19 @@ def read_transactions_from_csv(file_path: str) -> List[Dict[str, Any]]:
         True
     """
     try:
-        df = pd.read_csv(file_path)
+        df = pd.read_csv(
+            file_path,
+            sep=";",  # или ',' — смотрите по вашему CSV
+            encoding="utf-8",  # или 'cp1251'
+            decimal=",",  # если числа с запятой
+            dayfirst=True,  # для парсинга дат как ДД.ММ.ГГГГ
+        )
+
+        # Форматируем даты
+        for col in df.columns:
+            if pd.api.types.is_datetime64_any_dtype(df[col]):
+                df[col] = df[col].dt.strftime("%d.%m.%Y")
+
         # Преобразуем DataFrame в список словарей
         transactions = df.to_dict("records")
         return transactions
@@ -59,6 +71,12 @@ def read_transactions_from_excel(file_path: str) -> List[Dict[str, Any]]:
     """
     try:
         df = pd.read_excel(file_path)
+
+        # Форматируем даты
+        for col in df.columns:
+            if pd.api.types.is_datetime64_any_dtype(df[col]):
+                df[col] = df[col].dt.strftime("%d.%m.%Y")
+
         # Преобразуем DataFrame в список словарей
         transactions = df.to_dict("records")
         return transactions

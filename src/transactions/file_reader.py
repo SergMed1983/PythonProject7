@@ -22,16 +22,26 @@ def read_csv(file_path: str) -> List[Dict[str, Union[str, float]]]:
                 row["amount"] = float(row["amount"])
             except (ValueError, TypeError, KeyError):
                 pass
+
+            # Обработка дат
+            if "date" in row and row["date"]:
+                try:
+                    from datetime import datetime
+
+                    # Пробуем разные форматы
+                    for fmt in ("%Y-%m-%d", "%d.%m.%Y", "%m/%d/%Y"):
+                        try:
+                            dt = datetime.strptime(row["date"], fmt)
+                            row["date"] = dt.strftime("%d.%m.%Y")
+                            break
+                        except ValueError:
+                            continue
+                except Exception:
+                    pass
+
             transactions.append(row)
 
     return transactions
-
-
-def read_csv_transactions(file_path: str) -> List[Dict[str, Any]]:
-    """
-    Алиас для read_csv. Считывает финансовые операции из CSV-файла.
-    """
-    return read_csv(file_path)
 
 
 def read_excel(file_path: str) -> List[Dict[str, Union[str, float]]]:
@@ -42,6 +52,12 @@ def read_excel(file_path: str) -> List[Dict[str, Union[str, float]]]:
         return []
 
     df = pd.read_excel(file_path)
+
+    # Форматируем даты в нужный формат
+    for col in df.columns:
+        if pd.api.types.is_datetime64_any_dtype(df[col]):
+            df[col] = df[col].dt.strftime("%d.%m.%Y")
+
     df = df.where(pd.notnull(df), None)
     transactions = df.to_dict(orient="records")
 

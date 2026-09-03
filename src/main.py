@@ -37,9 +37,9 @@ def load_transactions_from_json(filepath: str) -> List[Dict[str, Any]]:
 
 def load_transactions_from_csv(filepath: str) -> List[Dict[str, Any]]:
     """Загружает транзакции из CSV-файла."""
-    from src.transactions.file_reader import read_csv_transactions
+    from src.transactions.file_reader import read_csv
 
-    transactions = read_csv_transactions(filepath)
+    transactions = read_csv(filepath)
     if not transactions:
         print(f"Файл {filepath} не найден или пуст.")
     return transactions
@@ -64,7 +64,7 @@ def load_transactions_from_xlsx(filepath: str) -> List[Dict[str, Any]]:
 
         for col in df.columns:
             if pd.api.types.is_datetime64_any_dtype(df[col]):
-                df[col] = df[col].dt.strftime("%Y-%m-%d")
+                df[col] = df[col].dt.strftime("%d.%m.%Y")
             elif df[col].dtype == "object":
                 try:
                     sample = (
@@ -73,7 +73,7 @@ def load_transactions_from_xlsx(filepath: str) -> List[Dict[str, Any]]:
                     if sample and isinstance(sample, str):
                         df[col] = pd.to_datetime(df[col], errors="coerce")
                         if pd.api.types.is_datetime64_any_dtype(df[col]):
-                            df[col] = df[col].dt.strftime("%Y-%m-%d")
+                            df[col] = df[col].dt.strftime("%d.%m.%Y")
                 except Exception:
                     pass
 
@@ -99,11 +99,10 @@ def load_transactions_from_xlsx(filepath: str) -> List[Dict[str, Any]]:
 
 
 def generate_test_transactions() -> List[Dict[str, Any]]:
-    """Генерирует тестовый набор транзакций для демонстрации."""
     return [
         {
             "id": 1,
-            "date": "2019-12-08",
+            "date": "08.12.2019",
             "description": "Открытие вклада",
             "amount": 40542,
             "currency": "руб.",
@@ -111,7 +110,7 @@ def generate_test_transactions() -> List[Dict[str, Any]]:
         },
         {
             "id": 2,
-            "date": "2019-11-12",
+            "date": "12.11.2019",
             "description": "Перевод с карты на карту",
             "amount": 130,
             "currency": "USD",
@@ -119,7 +118,7 @@ def generate_test_transactions() -> List[Dict[str, Any]]:
         },
         {
             "id": 3,
-            "date": "2018-07-18",
+            "date": "18.07.2018",
             "description": "Перевод организации",
             "amount": 8390,
             "currency": "руб.",
@@ -127,7 +126,7 @@ def generate_test_transactions() -> List[Dict[str, Any]]:
         },
         {
             "id": 4,
-            "date": "2018-06-03",
+            "date": "03.06.2018",
             "description": "Перевод со счета на счет",
             "amount": 8200,
             "currency": "EUR",
@@ -135,7 +134,7 @@ def generate_test_transactions() -> List[Dict[str, Any]]:
         },
         {
             "id": 5,
-            "date": "2020-01-01",
+            "date": "01.01.2020",
             "description": "Оплата интернета",
             "amount": 500,
             "currency": "руб.",
@@ -166,9 +165,22 @@ def print_transactions(transactions: List[Dict[str, Any]]) -> None:
 
     for tx in transactions:
         date = tx.get("date", "Дата не указана")
-        if date and isinstance(date, str):
-            date = date.split("T")[0].split(" ")[0]
 
+        # Преобразуем дату из ГГГГ-ММ-ДД в ДД.ММ.ГГГГ
+
+        if date and isinstance(date, str) and "-" in date:
+
+            try:
+
+                from datetime import datetime
+
+                date_obj = datetime.strptime(date, "%Y-%m-%d")
+
+                date = date_obj.strftime("%d.%m.%Y")
+
+            except ValueError:
+
+                pass
         description = tx.get("description", "Без описания")
         amount, currency = get_transaction_amount(tx)
 

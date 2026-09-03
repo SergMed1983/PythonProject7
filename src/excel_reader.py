@@ -28,7 +28,7 @@ def read_excel(file_path: str) -> List[Dict[str, Union[str, float, int]]]:
             # Проверяем, является ли колонка датой
             if pd.api.types.is_datetime64_any_dtype(df[col]):
                 # Форматируем даты в строку ГГГГ-ММ-ДД
-                df[col] = df[col].dt.strftime("%Y-%m-%d")
+                df[col] = df[col].dt.strftime("%d.%m.%Y")
             elif df[col].dtype == "object":
                 # Пробуем преобразовать строки в даты
                 try:
@@ -40,7 +40,7 @@ def read_excel(file_path: str) -> List[Dict[str, Union[str, float, int]]]:
                         # Пробуем распарсить как дату
                         df[col] = pd.to_datetime(df[col], errors="coerce")
                         if pd.api.types.is_datetime64_any_dtype(df[col]):
-                            df[col] = df[col].dt.strftime("%Y-%m-%d")
+                            df[col] = df[col].dt.strftime("%d.%m.%Y")
                 except Exception:
                     pass
 
