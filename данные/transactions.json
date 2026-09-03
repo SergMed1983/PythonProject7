@@ -1,0 +1,26 @@
+[
+    {
+        "id": 1,
+        "date": "2023-01-15",
+        "state": "EXECUTED",
+        "description": "Перевод на карту",
+        "category": "Переводы",
+        "amount": 1000
+    },
+    {
+        "id": 2,
+        "date": "2023-02-20",
+        "state": "CANCELED",
+        "description": "Оплата покупки",
+        "category": "Покупки",
+        "amount": 500
+    },
+    {
+        "id": 3,
+        "date": "2023-01-01",
+        "state": "EXECUTED",
+        "description": "Перевод другу",
+        "category": "Переводы",
+        "amount": 200
+    }
+]

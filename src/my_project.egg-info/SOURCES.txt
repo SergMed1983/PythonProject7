@@ -1,0 +1,16 @@
+README.md
+pyproject.toml
+src/__init__.py
+src/main.py
+src/text_utils.py
+src/decorators/__init__.py
+src/decorators/log_decorator.py
+src/my_project.egg-info/PKG-INFO
+src/my_project.egg-info/SOURCES.txt
+src/my_project.egg-info/dependency_links.txt
+src/my_project.egg-info/top_level.txt
+tests/test_decorators.py
+tests/test_generators.py
+tests/test_log_decorator.py
+tests/test_processing.py
+tests/test_text_utils.py
